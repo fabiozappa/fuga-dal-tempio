@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fuga Isometrica</title>
+
+  <!-- Unica dipendenza esterna: Three.js via importmap da CDN.
+       Nessun build step, nessun bundler. Si apre da server locale e funziona. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0a0a12;
+      color: #e0e0f0;
+      font-family: system-ui, sans-serif;
+      overflow: hidden;
+    }
+    /* Contenitore della futura scena Three.js (Fase 2). Per ora vuoto. */
+    #game {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .placeholder {
+      opacity: 0.5;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <p class="placeholder">Fuga Isometrica — Fase 0<br>impalcatura pronta, scena non ancora implementata</p>
+  </div>
+
+  <!-- Punto di ingresso. In Fase 0 verifica solo che i moduli si carichino. -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

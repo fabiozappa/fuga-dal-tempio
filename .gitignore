@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Editor / IDE
+.nova/
+.vscode/
+.idea/
+*.swp
+
+# Log e file temporanei
+*.log
+node_modules/
