@@ -5,21 +5,279 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fuga Isometrica — Debug</title>
   <style>
+    :root {
+      --off:      #15151d;
+      --path:     #0e7c8a;
+      --power:    #c99a2e;
+      --unlocked: #2f5d8f;
+      --collected:#264a63;
+      --error:    #c0392b;
+    }
+    * { box-sizing: border-box; }
     html, body {
       margin: 0;
-      padding: 1rem;
-      background: #101018;
+      background: #0a0a12;
       color: #e0e0f0;
-      font-family: monospace;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
     }
-    /* Vista di debug DOM: nelle fasi successive disegnerà lo stato del gioco
-       come griglia di <div> colorati, senza alcun Three.js. Per ora vuota. */
+    #wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      padding: 1rem;
+      align-items: flex-start;
+    }
+    h1 { font-size: 1rem; margin: 0 0 .5rem; letter-spacing: .05em; }
+
+    /* Griglia: riga 0 in basso, ultima riga in alto (up = verso l'alto). */
+    #grid { display: grid; gap: 3px; }
+    .cell {
+      width: 46px; height: 46px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 5px;
+      font-size: .7rem; font-weight: 700;
+      color: #cfe;
+      position: relative;
+      transition: background-color .08s linear;
+      background: var(--off);
+    }
+    .cell.path      { background: var(--path); }
+    .cell.power     { background: var(--power); color: #201800; }
+    .cell.unlocked  { background: var(--unlocked); }
+    .cell.collected { background: var(--collected); }
+    .cell.error     { background: var(--error); }
+    .cell .pu { position: absolute; top: 2px; left: 4px; font-size: .6rem; opacity: .85; }
+    .cell.player  { outline: 3px solid #2ecc71; outline-offset: -3px; }
+    .cell.villain { outline: 3px solid #e74c3c; outline-offset: -3px; }
+    .actor { font-size: .95rem; }
+    .actor .p { color: #2ecc71; }
+    .actor .v { color: #ff6b5b; }
+
+    /* Pannello laterale */
+    #panel { min-width: 240px; }
+    .row { margin: .25rem 0; }
+    .k { color: #8aa; }
+    .lives { color: #ff6b5b; letter-spacing: .15em; }
+    .phase { font-weight: 700; }
+    .bar { height: 6px; background: #223; border-radius: 3px; overflow: hidden; margin-top: 2px; }
+    .bar > i { display: block; height: 100%; background: #4ac; }
+    #banner {
+      min-height: 1.4rem; margin: .5rem 0; font-weight: 700; letter-spacing: .03em;
+    }
+    #log {
+      margin-top: .75rem; height: 180px; overflow-y: auto;
+      background: #0d0d16; border: 1px solid #1e1e2c; border-radius: 6px;
+      padding: .4rem .5rem; font-size: .72rem; line-height: 1.5;
+    }
+    .legend { margin-top: .75rem; font-size: .72rem; color: #99a; }
+    .legend span { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin: 0 3px 0 8px; }
+    kbd { background: #222; border: 1px solid #444; border-radius: 4px; padding: 0 5px; }
   </style>
 </head>
 <body>
-  <h1>Debug — Fuga Isometrica</h1>
-  <p>Fase 0: vista di debug non ancora implementata.</p>
+  <div id="wrap">
+    <div>
+      <h1>DEBUG — FUGA ISOMETRICA</h1>
+      <div id="grid"></div>
+      <div class="legend">
+        <span style="background:var(--path)"></span>percorso
+        <span style="background:var(--power)"></span>power-up
+        <span style="background:var(--unlocked)"></span>sbloccata
+        <span style="background:var(--off)"></span>spenta
+        <br>Controlli: <kbd>WASD</kbd>/<kbd>frecce</kbd> muovi · <kbd>R</kbd> restart
+      </div>
+    </div>
 
-  <!-- La vista di debug NON userà mai Three.js: legge solo src/core/. -->
+    <div id="panel">
+      <div class="row"><span class="k">Livello</span> <b id="level"></b></div>
+      <div class="row"><span class="k">Fase</span> <span class="phase" id="phase"></span></div>
+      <div class="row"><span class="k">Vite</span> <span class="lives" id="lives"></span></div>
+      <div class="row"><span class="k" id="timerLabel"></span>
+        <div class="bar"><i id="timerBar"></i></div>
+      </div>
+      <div class="row"><span class="k">Gelo</span> <b id="freeze"></b> · <span class="k">Rivelatore</span> <b id="reveal"></b></div>
+      <div id="banner"></div>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { CONFIG } from './src/config.js';
+    import { GameState, PHASES } from './src/core/gameState.js';
+    import { POWERUP_LABELS } from './src/core/powerUps.js';
+    import { cellKey } from './src/core/grid.js';
+
+    const PHASE_LABEL = {
+      [PHASES.PREVIEW]: 'ANTEPRIMA',
+      [PHASES.FUGA]: 'FUGA (villain fermo)',
+      [PHASES.CHASE]: 'INSEGUIMENTO',
+      [PHASES.WON]: 'LIVELLO SUPERATO',
+      [PHASES.GAME_OVER]: 'GAME OVER',
+    };
+
+    const game = new GameState({ config: CONFIG });
+    game.startGame();
+
+    const $ = (id) => document.getElementById(id);
+    const gridEl = $('grid');
+    const logEl = $('log');
+
+    // Flash rosso temporaneo su errore (solo visivo, gestito dalla vista).
+    let errorFlash = { key: null, until: 0 };
+    let banner = { text: '', until: 0 };
+
+    function logLine(text, color = '#9df') {
+      const p = document.createElement('div');
+      p.style.color = color;
+      p.textContent = text;
+      logEl.prepend(p);
+    }
+
+    // Reagisce agli eventi emessi dal motore.
+    function handleEvents(now) {
+      for (const e of game.drainEvents()) {
+        switch (e.type) {
+          case 'phase':
+            logLine('→ ' + (PHASE_LABEL[e.phase] || e.phase), '#7fd');
+            break;
+          case 'wrongStep':
+            errorFlash = { key: cellKey(e.cell.x, e.cell.y), until: now + 350 };
+            logLine('✗ casella sbagliata ' + e.cell.x + ',' + e.cell.y + ' (−1 vita)', '#f88');
+            break;
+          case 'powerUp':
+            logLine('★ power-up: ' + (POWERUP_LABELS[e.kind] || e.kind), '#fd6');
+            break;
+          case 'capture':
+            logLine('☠ catturato! villain e giocatore ripartono', '#f88');
+            banner = { text: 'CATTURATO — riparti!', until: now + 1500 };
+            break;
+          case 'win':
+            logLine('✓ livello ' + e.level + ' superato', '#7f8');
+            banner = { text: 'LIVELLO ' + e.level + ' SUPERATO!', until: now + 1500 };
+            game.nextLevel();
+            break;
+          case 'gameOver': {
+            const why = e.reason === 'villainFinish'
+              ? 'il villain ha raggiunto il traguardo'
+              : 'vite esaurite';
+            logLine('■ GAME OVER — ' + why, '#f66');
+            banner = { text: 'GAME OVER (' + why + ') — premi R', until: Infinity };
+            break;
+          }
+        }
+      }
+    }
+
+    // Costruisce/aggiorna la griglia di div in base allo snapshot.
+    let builtFor = ''; // dimensioni per cui la griglia DOM è stata costruita
+    function render(snap, now) {
+      const dimKey = snap.width + 'x' + snap.height;
+      if (dimKey !== builtFor) {
+        // Ricostruisce la struttura solo quando cambiano le dimensioni.
+        gridEl.style.gridTemplateColumns = `repeat(${snap.width}, 46px)`;
+        gridEl.innerHTML = '';
+        // Righe dall'alto (y alto) verso il basso (y=0): up = verso l'alto.
+        for (let y = snap.height - 1; y >= 0; y--) {
+          for (let x = 0; x < snap.width; x++) {
+            const d = document.createElement('div');
+            d.className = 'cell';
+            d.dataset.key = cellKey(x, y);
+            d.dataset.x = x; d.dataset.y = y;
+            gridEl.appendChild(d);
+          }
+        }
+        builtFor = dimKey;
+      }
+
+      const puByKey = new Map(snap.powerUps.map((p) => [cellKey(p.x, p.y), p]));
+
+      for (const d of gridEl.children) {
+        const x = +d.dataset.x, y = +d.dataset.y;
+        const key = d.dataset.key;
+        const unlocked = snap.unlocked.has(key);
+        const isPath = snap.pathKeys.has(key);
+        const pu = puByKey.get(key);
+
+        let cls = 'cell';
+        // Percorso e power-up visibili solo quando "rivelati".
+        if (snap.reveal && isPath && !unlocked) cls += ' path';
+        if (snap.reveal && pu && !pu.collected) cls += ' power';
+        if (unlocked) cls += pu && pu.collected ? ' collected' : ' unlocked';
+        if (errorFlash.key === key && now < errorFlash.until) cls += ' error';
+
+        const isPlayer = snap.player.x === x && snap.player.y === y;
+        const isVillain = snap.villain.x === x && snap.villain.y === y;
+        if (isPlayer) cls += ' player';
+        if (isVillain) cls += ' villain';
+        d.className = cls;
+
+        // Contenuto: attori e sigla del power-up.
+        let inner = '';
+        if (snap.reveal && pu && !pu.collected) {
+          inner += `<span class="pu">${pu.kind[0].toUpperCase()}</span>`;
+        }
+        const actors = [];
+        if (isPlayer) actors.push('<span class="p">P</span>');
+        if (isVillain) actors.push('<span class="v">V</span>');
+        if (actors.length) inner += `<span class="actor">${actors.join('')}</span>`;
+        d.innerHTML = inner;
+      }
+    }
+
+    function renderPanel(snap, now) {
+      $('level').textContent = snap.level;
+      const phaseEl = $('phase');
+      phaseEl.textContent = PHASE_LABEL[snap.phase] || snap.phase;
+      $('lives').textContent = '♥'.repeat(Math.max(0, snap.lives)) || '—';
+
+      // Barra del timer di fase in corso.
+      let label = '', frac = 0;
+      if (snap.phase === PHASES.PREVIEW) {
+        label = 'Anteprima'; frac = snap.timers.previewMs / CONFIG.timing.previewMs;
+      } else if (snap.phase === PHASES.FUGA) {
+        label = 'Vantaggio'; frac = snap.timers.headStartMs / CONFIG.timing.villainHeadStartMs;
+      } else if (snap.phase === PHASES.CHASE) {
+        label = 'Inseguimento'; frac = 1;
+      }
+      $('timerLabel').textContent = label;
+      $('timerBar').style.width = Math.round(frac * 100) + '%';
+
+      $('freeze').textContent = snap.timers.freezeMs > 0 ? (snap.timers.freezeMs / 1000).toFixed(1) + 's' : '—';
+      $('reveal').textContent = snap.timers.revealMs > 0 ? (snap.timers.revealMs / 1000).toFixed(1) + 's' : '—';
+
+      $('banner').textContent = now < banner.until ? banner.text : '';
+    }
+
+    // --- Input: un passo per pressione (nessun cooldown: è roba di Fase 3) ---
+    const KEYMAP = {
+      ArrowUp: 'up', KeyW: 'up',
+      ArrowDown: 'down', KeyS: 'down',
+      ArrowLeft: 'left', KeyA: 'left',
+      ArrowRight: 'right', KeyD: 'right',
+    };
+    window.addEventListener('keydown', (ev) => {
+      if (ev.code === 'KeyR') { game.startGame(); banner = { text: '', until: 0 }; return; }
+      const dir = KEYMAP[ev.code];
+      if (dir) { ev.preventDefault(); game.movePlayer(dir); }
+    });
+
+    // --- Loop temporale: accumulatore su performance.now() con delta time ---
+    let last = performance.now();
+    function frame(now) {
+      let dt = now - last;
+      last = now;
+      if (dt > 250) dt = 250; // clamp: evita salti enormi (tab in background)
+
+      game.update(dt);
+      handleEvents(now);
+
+      const snap = game.getSnapshot();
+      render(snap, now);
+      renderPanel(snap, now);
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
 </body>
 </html>

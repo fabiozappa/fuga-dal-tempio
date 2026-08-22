@@ -192,7 +192,9 @@ record in `localStorage`.
 
 ## Stato attuale
 
-**Fase 0** — da iniziare.
+**Fase 1** — completata. Motore in `src/core/` (griglia, generazione percorso con
+rami ciechi, macchina a stati delle 4 fasi, villain, vite, penalità, vittoria e
+sconfitte) e `debug.html` giocabile da tastiera. Zero Three.js. Prossima: Fase 2.
 
 ---
 
