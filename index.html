@@ -17,36 +17,50 @@
   </script>
 
   <style>
+    * { box-sizing: border-box; }
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #0a0a12;
-      color: #e0e0f0;
-      font-family: system-ui, sans-serif;
+      margin: 0; padding: 0; height: 100%;
+      background: #0a0a12; color: #e0e0f0;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
       overflow: hidden;
     }
-    /* Contenitore della futura scena Three.js (Fase 2). Per ora vuoto. */
-    #game {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* Contenitore della scena Three.js: occupa tutto lo schermo. */
+    #game { position: fixed; inset: 0; }
+    #game canvas { display: block; }
+
+    /* HUD overlay minimale (l'HUD completo è materia di Fase 4). */
+    #hud {
+      position: fixed; inset: 0; pointer-events: none;
+      display: flex; flex-direction: column;
     }
-    .placeholder {
-      opacity: 0.5;
-      font-size: 0.9rem;
-      text-align: center;
+    #hud .top {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: env(safe-area-inset-top, 0) .9rem 0;
+      padding-top: max(env(safe-area-inset-top, 0), .8rem);
+    }
+    #level { font-weight: 700; }
+    #phase { opacity: .8; letter-spacing: .08em; font-size: .8rem; }
+    #lives { color: #ff6b5b; letter-spacing: .12em; font-size: 1.1rem; }
+    #banner {
+      margin-top: auto; margin-bottom: 12vh; text-align: center;
+      font-weight: 700; letter-spacing: .04em; font-size: 1.1rem;
+      text-shadow: 0 2px 8px #000;
     }
   </style>
 </head>
 <body>
-  <div id="game">
-    <p class="placeholder">Fuga Isometrica — Fase 0<br>impalcatura pronta, scena non ancora implementata</p>
+  <div id="game"></div>
+
+  <div id="hud">
+    <div class="top">
+      <span id="level"></span>
+      <span id="phase"></span>
+      <span id="lives"></span>
+    </div>
+    <div id="banner"></div>
   </div>
 
-  <!-- Punto di ingresso. In Fase 0 verifica solo che i moduli si carichino. -->
+  <!-- Punto di ingresso: collega core + render + input. -->
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>

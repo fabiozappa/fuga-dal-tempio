@@ -192,9 +192,11 @@ record in `localStorage`.
 
 ## Stato attuale
 
-**Fase 1** — completata. Motore in `src/core/` (griglia, generazione percorso con
-rami ciechi, macchina a stati delle 4 fasi, villain, vite, penalità, vittoria e
-sconfitte) e `debug.html` giocabile da tastiera. Zero Three.js. Prossima: Fase 2.
+**Fase 2** — completata. Rendering isometrico in `src/render/` (scena, camera
+ortografica a 45° con frustum adattivo, tile con materiali per stato, capsule di
+giocatore e villain, gemme dei power-up). `main.js` collega core + render + input
+(tastiera). `index.html` mostra il gioco in 3D; `debug.html` resta funzionante.
+Prossima: Fase 3 (input, cooldown, D-Pad touch, mobile).
 
 ---
 
