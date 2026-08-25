@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Fuga Isometrica</title>
 
-  <!-- Unica dipendenza esterna: Three.js via importmap da CDN.
-       Nessun build step, nessun bundler. Si apre da server locale e funziona. -->
+  <!-- Unica dipendenza esterna: Three.js (r169), vendorizzata in locale e
+       risolta via importmap. Nessun build step, nessun bundler, nessuna rete:
+       si apre da server locale e funziona anche offline. -->
   <script type="importmap">
   {
     "imports": {
-      "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+      "three": "./assets/vendor/three.module.js"
     }
   }
   </script>
