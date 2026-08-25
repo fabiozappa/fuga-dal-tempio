@@ -7,9 +7,9 @@
 import * as THREE from 'three';
 
 // Direzione isometrica di vista (angolo 45° in azimut). Guardiamo la plancia
-// dall'angolo (+X, +Y, +Z): il basso-schermo è la riga 0 (partenza), l'alto è
-// il traguardo.
-const ISO_DIR = new THREE.Vector3(1, 1, 1).normalize();
+// dall'angolo (-X, +Y, -Z): così la riga 0 (partenza) sta in basso a sinistra
+// e il traguardo verso l'alto — si gioca "salendo", più intuitivo.
+const ISO_DIR = new THREE.Vector3(-1, 1, -1).normalize();
 
 export function createCamera() {
   // Valori placeholder: verranno sovrascritti da fitCameraToBoard.

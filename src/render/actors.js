@@ -15,6 +15,12 @@ function makeCapsule(color) {
   return new THREE.Mesh(geo, mat);
 }
 
+// Sfasamento lungo l'orizzontale-schermo (direzione "destra" della camera iso,
+// vedi ISO_DIR in camera.js): tiene le due capsule distinte quando si trovano
+// sulla stessa casella, senza spostarle in modo percepibile su caselle diverse.
+const SEP = 0.18;
+const SEP_DIR = new THREE.Vector3(-1, 0, 1).normalize();
+
 export class Actors {
   constructor() {
     this.group = new THREE.Group();
@@ -27,9 +33,13 @@ export class Actors {
   update(snap, tileGrid) {
     const standY = 0.52; // le capsule poggiano sopra il piano delle tile
     const p = tileGrid.worldPos(snap.player.x, snap.player.y);
-    this.player.position.set(p.x, standY, p.z);
+    this.player.position.set(
+      p.x + SEP_DIR.x * SEP, standY, p.z + SEP_DIR.z * SEP
+    );
 
     const v = tileGrid.worldPos(snap.villain.x, snap.villain.y);
-    this.villain.position.set(v.x, standY, v.z);
+    this.villain.position.set(
+      v.x - SEP_DIR.x * SEP, standY, v.z - SEP_DIR.z * SEP
+    );
   }
 }
