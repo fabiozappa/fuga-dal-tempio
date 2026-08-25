@@ -15,11 +15,11 @@ function makeCapsule(color) {
   return new THREE.Mesh(geo, mat);
 }
 
-// Sfasamento lungo l'orizzontale-schermo (direzione "destra" della camera iso,
-// vedi ISO_DIR in camera.js): tiene le due capsule distinte quando si trovano
-// sulla stessa casella, senza spostarle in modo percepibile su caselle diverse.
+// Sfasamento lungo l'orizzontale-schermo (con la camera corrente l'asse X del
+// mondo è orizzontale): tiene le due capsule distinte quando si trovano sulla
+// stessa casella, senza spostarle in modo percepibile su caselle diverse.
 const SEP = 0.18;
-const SEP_DIR = new THREE.Vector3(-1, 0, 1).normalize();
+const SEP_DIR = new THREE.Vector3(1, 0, 0);
 
 export class Actors {
   constructor() {

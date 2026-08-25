@@ -32,9 +32,11 @@ export class TileGrid {
   }
 
   // Posizione nel mondo di una casella (plancia centrata nell'origine).
+  // L'asse x è specchiato (segno negativo) così che l'aumento della colonna di
+  // gioco corrisponda alla destra dello schermo con la camera corrente.
   worldPos(x, y) {
     return new THREE.Vector3(
-      (x - (this.width - 1) / 2) * this.spacing,
+      -(x - (this.width - 1) / 2) * this.spacing,
       0,
       (y - (this.height - 1) / 2) * this.spacing
     );
