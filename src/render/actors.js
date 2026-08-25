@@ -3,6 +3,7 @@
 // posizione è impostata direttamente (nessuna interpolazione: è roba di Fase 5).
 
 import * as THREE from 'three';
+import { SCREEN_RIGHT } from './camera.js';
 
 const PLAYER_COLOR = 0x2ecc71;
 const VILLAIN_COLOR = 0xe74c3c;
@@ -15,11 +16,11 @@ function makeCapsule(color) {
   return new THREE.Mesh(geo, mat);
 }
 
-// Sfasamento lungo l'orizzontale-schermo (con la camera corrente l'asse X del
-// mondo è orizzontale): tiene le due capsule distinte quando si trovano sulla
-// stessa casella, senza spostarle in modo percepibile su caselle diverse.
+// Sfasamento lungo l'orizzontale-schermo (versore SCREEN_RIGHT dalla camera):
+// tiene le due capsule distinte quando si trovano sulla stessa casella, senza
+// spostarle in modo percepibile su caselle diverse.
 const SEP = 0.18;
-const SEP_DIR = new THREE.Vector3(1, 0, 0);
+const SEP_DIR = SCREEN_RIGHT;
 
 export class Actors {
   constructor() {

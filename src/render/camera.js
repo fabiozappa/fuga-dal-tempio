@@ -1,15 +1,31 @@
-// Camera isometrica — Three.js. Legge solo dimensioni, non conosce il core.
-//
-// OrthographicCamera posizionata a 45° (vista isometrica). Il frustum si
-// adatta all'aspect ratio garantendo che l'intera plancia — e quindi tutte
-// le 6 colonne — resti sempre visibile.
+// Camera ortografica — Three.js. Legge solo dimensioni, non conosce il core.
+// Il frustum si adatta all'aspect ratio garantendo che l'intera plancia — e
+// quindi tutte le 6 colonne — resti sempre visibile.
 
 import * as THREE from 'three';
 
-// Direzione di vista: azimut 0, pitch 45° (camera sopra e davanti, che guarda
-// verso -Z inclinata di 45°). Le colonne sono orizzontali sullo schermo e il
-// traguardo sta dritto in alto: si gioca "salendo", con controlli leggibili.
-const ISO_DIR = new THREE.Vector3(0, 1, -1).normalize();
+// Orientamento della vista, in gradi. Un leggero azimut (~22°) mantiene un
+// accenno di prospettiva isometrica — profondità visibile sui lati delle
+// caselle — restando "quasi dritto" e con controlli leggibili. L'elevazione
+// (~35°) è quella isometrica classica. Ritoccare qui per cambiare la vista.
+const AZIMUTH_DEG = 22;
+const ELEVATION_DEG = 35;
+
+const AZ = (AZIMUTH_DEG * Math.PI) / 180;
+const EL = (ELEVATION_DEG * Math.PI) / 180;
+
+// Direzione dalla plancia alla camera (azimut da -Z verso +X, elevazione su).
+const ISO_DIR = new THREE.Vector3(
+  Math.cos(EL) * Math.sin(AZ),
+  Math.sin(EL),
+  -Math.cos(EL) * Math.cos(AZ)
+).normalize();
+
+// Versore "destra dello schermo" nel mondo, dato l'azimut: serve agli attori
+// per sfasarsi lungo l'orizzontale-schermo. (Deriva da cross(up, ISO_DIR).)
+export const SCREEN_RIGHT = new THREE.Vector3(
+  -Math.cos(AZ), 0, -Math.sin(AZ)
+).normalize();
 
 export function createCamera() {
   // Valori placeholder: verranno sovrascritti da fitCameraToBoard.
