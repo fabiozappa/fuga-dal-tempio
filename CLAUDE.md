@@ -141,6 +141,9 @@ export const CONFIG = {
   lives:   { start: 3, max: 5 },
   powerUps:{ freezeMs: 4000, revealMs: 2500 },
   branches:{ rowsPerPowerUp: 3, minLength: 1, maxLength: 3 },
+  // Curva di difficoltà: per livello il villain accelera e il vantaggio cala.
+  difficulty:{ villainStepDecrementMs: 25, villainStepMinMs: 380,
+               headStartDecrementMs: 150, headStartMinMs: 1200 },
 };
 ```
 
@@ -199,13 +202,15 @@ record in `localStorage`.
 
 ## Stato attuale
 
-**Fase 5** — completata. Juice: interpolazione morbida dei movimenti (smoothing
-esponenziale in `render/actors.js`), pulsazione delle caselle in anteprima,
-lampeggio errore più marcato, audio procedurale (`src/audio/sound.js`, Web Audio,
-niente file) con suoni per passo/errore/power-up/cattura/vittoria/game-over,
-vibrazione mobile su errore/raccolta/cattura, pulsante mute. `window.game`
-resta come handle di debug.
-Prossima: Fase 6 (progressione: difficoltà per livello, titolo/game over, record).
+**Fase 6** — completata. Progressione: curva di difficoltà per livello
+(`config.difficulty`: il villain accelera e il vantaggio cala fino a un limite),
+schermate di titolo e game over (overlay DOM in `index.html`, macchina a stati
+'title'/'playing'/'over' in `main.js`), record del livello massimo persistito in
+localStorage. Si gioca dal livello 1 alla sconfitta senza ricaricare.
+
+**Roadmap completata.** Prossimo lavoro (non ancora pianificato): direzione
+artistica e grafica/personaggi — è una decisione ancora aperta, va scelto lo
+stile prima di implementare.
 
 ---
 
@@ -219,8 +224,8 @@ Non implementare nulla di questo senza che sia stato deciso esplicitamente.
   meccanismo di recupero accettabile.
 - **Direzione artistica**: sci-fi/Tron, tempio in rovina, laboratorio, minimalista
   neon. Fino alla Fase 5 restano capsule e cubi low-poly.
-- **Difficoltà progressiva**: se e quando accelerare il villain o ridurre il
-  vantaggio iniziale (già previsti come parametri, non ancora variabili).
+- ~~**Difficoltà progressiva**~~: implementata in Fase 6 (`config.difficulty`):
+  il villain accelera e il vantaggio iniziale cala per livello, fino a un limite.
 - **Preview dinamica**: durata fissa o crescente con H.
 - **Caselle speciali**: crepacci, teletrasporti, unidirezionali.
 - **Monete, shop, skin**; modalità Survival / Time Attack.

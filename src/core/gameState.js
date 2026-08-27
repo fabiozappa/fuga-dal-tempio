@@ -62,9 +62,20 @@ export class GameState {
 
     this.villain = new Villain(this.path);
 
+    // Difficoltà del livello: il villain accelera e il vantaggio cala (vedi
+    // config.difficulty). Calcolati una volta per livello.
+    const t = this.config.timing;
+    const d = this.config.difficulty;
+    this.villainStepMs = Math.max(
+      d.villainStepMinMs, t.villainStepMs - (this.level - 1) * d.villainStepDecrementMs
+    );
+    this.headStartMs = Math.max(
+      d.headStartMinMs, t.villainHeadStartMs - (this.level - 1) * d.headStartDecrementMs
+    );
+
     // Timer delle fasi ed effetti.
     this.previewRemainingMs = this.config.timing.previewMs;
-    this.headStartRemainingMs = this.config.timing.villainHeadStartMs;
+    this.headStartRemainingMs = this.headStartMs;
     this.freezeRemainingMs = 0;
     this.revealRemainingMs = 0;
     this.stepCooldownRemainingMs = 0;
@@ -109,7 +120,7 @@ export class GameState {
   // Entra in FUGA: il villain è fermo, parte il conto del vantaggio iniziale.
   enterFuga() {
     this.phase = PHASES.FUGA;
-    this.headStartRemainingMs = this.config.timing.villainHeadStartMs;
+    this.headStartRemainingMs = this.headStartMs; // vantaggio del livello corrente
     this.emit('phase', { phase: this.phase });
   }
 
@@ -144,7 +155,7 @@ export class GameState {
     // Avanzamento del villain a cadenza costante (può fare più passi se dt è
     // grande, es. scheda tornata in primo piano). Controlli passo per passo.
     this.villain.addTime(dtMs);
-    const stepMs = this.config.timing.villainStepMs;
+    const stepMs = this.villainStepMs;
     while (this.phase === PHASES.CHASE && this.villain.canStep(stepMs)) {
       if (this.villain.atFinish) {
         this.triggerGameOver('villainFinish');

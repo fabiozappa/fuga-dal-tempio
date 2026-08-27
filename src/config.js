@@ -54,4 +54,16 @@ export const CONFIG = {
     minLength: 1,
     maxLength: 3,
   },
+
+  // Curva di difficoltà per livello. A partire dai valori base in `timing`, ad
+  // ogni livello il villain accelera e il vantaggio iniziale cala, fino a un
+  // limite. Effettivo al livello L:
+  //   villainStepMs   = max(villainStepMinMs,  timing.villainStepMs      − (L−1)·villainStepDecrementMs)
+  //   headStartMs      = max(headStartMinMs,    timing.villainHeadStartMs − (L−1)·headStartDecrementMs)
+  difficulty: {
+    villainStepDecrementMs: 25,  // il villain accelera di 25ms/livello
+    villainStepMinMs: 380,       // ma non più veloce di così
+    headStartDecrementMs: 150,   // il vantaggio iniziale cala di 150ms/livello
+    headStartMinMs: 1200,        // ma non sotto questo
+  },
 };

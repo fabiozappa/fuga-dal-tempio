@@ -22,15 +22,29 @@ const container = document.getElementById('game');
 const renderer = new GameRenderer(container);
 
 const game = new GameState({ config: CONFIG });
-game.startGame();
+game.startGame(); // prepara una scena (percorso mostrato dietro il titolo)
 
 // Handle di debug: comodo per ispezionare o pilotare lo stato dalla console.
 window.game = game;
 
-// HUD (DOM). L'HUD completo è materia di Fase 4: qui il minimo per giocare.
+// Stato dell'interfaccia: 'title' | 'playing' | 'over'. La logica di gioco
+// avanza solo in 'playing'; le schermate sono overlay DOM.
+let uiState = 'title';
+
 const $ = (id) => document.getElementById(id);
 let banner = { text: '', until: 0 };
 let errorFlash = { key: null, until: 0 };
+
+// Record persistente (livello massimo raggiunto) in localStorage.
+const BEST_KEY = 'fuga_best';
+function loadBest() {
+  try { return parseInt(localStorage.getItem(BEST_KEY), 10) || 0; } catch { return 0; }
+}
+function saveBest(v) {
+  try { localStorage.setItem(BEST_KEY, String(v)); } catch { /* storage non disponibile */ }
+}
+let best = loadBest();
+const bestText = () => (best > 0 ? 'Record: livello ' + best : 'Nessun record');
 
 // Audio procedurale. Va "risvegliato" al primo gesto dell'utente.
 const sound = new Sound();
@@ -42,13 +56,28 @@ const vibrate = (pattern) => { if (navigator.vibrate) navigator.vibrate(pattern)
 // o D-Pad). Il core applica il cooldown, quindi si può chiamare movePlayer ad
 // ogni frame senza timer nell'input.
 const input = { heldDir: null };
-const step = (dir) => { sound.resume(); game.movePlayer(dir); };
-const restart = () => { sound.resume(); game.startGame(); banner = { text: '', until: 0 }; };
+const step = (dir) => { if (uiState === 'playing') game.movePlayer(dir); };
 
-createKeyboard({ input, onPress: step, onRestart: restart });
-createTouchDpad({ input, onPress: step, onRestart: restart });
+// Avvia (o riavvia) una partita da zero e nasconde le schermate.
+function beginGame() {
+  sound.resume();
+  game.startGame();
+  banner = { text: '', until: 0 };
+  input.heldDir = null;
+  uiState = 'playing';
+  $('title').classList.add('hidden');
+  $('gameover').classList.add('hidden');
+}
 
-// Pulsante mute (se presente nel DOM).
+createKeyboard({ input, onPress: step, onRestart: beginGame });
+createTouchDpad({ input, onPress: step, onRestart: beginGame });
+
+// Pulsanti delle schermate.
+$('playBtn').addEventListener('click', beginGame);
+$('retryBtn').addEventListener('click', beginGame);
+$('titleBest').textContent = bestText();
+
+// Pulsante mute.
 const muteBtn = $('mute');
 if (muteBtn) {
   muteBtn.addEventListener('pointerdown', (ev) => {
@@ -89,8 +118,13 @@ function handleEvents(now) {
         game.nextLevel();
         break;
       case 'gameOver': {
-        const why = e.reason === 'villainFinish' ? 'il villain è arrivato' : 'vite esaurite';
-        banner = { text: 'GAME OVER — ' + why + ' (premi R)', until: Infinity };
+        const reached = game.level;
+        if (reached > best) { best = reached; saveBest(best); }
+        const why = e.reason === 'villainFinish' ? 'Il villain è arrivato al traguardo.' : 'Vite esaurite.';
+        $('goResult').textContent = why + ' Sei arrivato al livello ' + reached + '.';
+        $('goBest').textContent = bestText();
+        $('gameover').classList.remove('hidden');
+        uiState = 'over';
         sound.gameOver();
         vibrate([80, 60, 80]);
         break;
@@ -128,10 +162,13 @@ function frame(now) {
   last = now;
   if (dt > 250) dt = 250; // clamp: evita salti enormi (scheda in background)
 
-  game.update(dt);
-  // Movimento continuo tenendo premuto: il core limita col cooldown.
-  if (input.heldDir) game.movePlayer(input.heldDir);
-  handleEvents(now);
+  // La logica avanza solo in gioco; su titolo/game over la scena resta ferma.
+  if (uiState === 'playing') {
+    game.update(dt);
+    // Movimento continuo tenendo premuto: il core limita col cooldown.
+    if (input.heldDir) game.movePlayer(input.heldDir);
+    handleEvents(now);
+  }
 
   const snap = game.getSnapshot();
   renderer.sync(snap, now, dt, errorFlash);

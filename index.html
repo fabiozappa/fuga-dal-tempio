@@ -101,6 +101,23 @@
     }
     #restart { right: .8rem; }
     #mute { left: .8rem; }
+
+    /* Schermate di titolo e game over. */
+    .screen {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 1rem; text-align: center; padding: 2rem;
+      background: rgba(10, 10, 18, 0.85);
+    }
+    .screen.hidden { display: none; }
+    .screen h1 { margin: 0; font-size: 2rem; letter-spacing: .12em; line-height: 1.15; }
+    .screen .hint { margin: 0; opacity: .75; font-size: .9rem; line-height: 1.5; }
+    .screen .best { margin: 0; opacity: .7; font-size: .85rem; }
+    .screen .play {
+      margin-top: .4rem; padding: .7rem 1.6rem; font-size: 1.05rem; font-weight: 700;
+      color: #0a0a12; background: #6fc7e0; border: none; border-radius: 12px;
+      pointer-events: auto; touch-action: manipulation; cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -125,6 +142,22 @@
   </div>
   <button id="restart" aria-label="ricomincia">↺</button>
   <button id="mute" aria-label="audio">🔊</button>
+
+  <!-- Schermata iniziale (Fase 6). -->
+  <div id="title" class="screen">
+    <h1>FUGA<br>ISOMETRICA</h1>
+    <p class="hint">Memorizza il percorso durante l'anteprima,<br>poi ripercorrilo a memoria prima che il villain ti raggiunga.</p>
+    <button class="play" id="playBtn">▶ Gioca</button>
+    <p class="best" id="titleBest"></p>
+  </div>
+
+  <!-- Schermata di game over (Fase 6). -->
+  <div id="gameover" class="screen hidden">
+    <h1>GAME OVER</h1>
+    <p class="hint" id="goResult"></p>
+    <p class="best" id="goBest"></p>
+    <button class="play" id="retryBtn">↺ Riprova</button>
+  </div>
 
   <!-- Punto di ingresso: collega core + render + input. Percorso relativo, così
        il gioco funziona in qualsiasi cartella (radice o sottocartella). L'anti-
