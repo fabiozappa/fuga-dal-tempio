@@ -45,12 +45,12 @@ export const CONFIG = {
   },
 
   // Generazione dei rami ciechi che si diramano dal percorso principale.
-  // minPerLevel/maxPerLevel → quanti rami per livello.
-  // minLength/maxLength     → lunghezza di ciascun ramo, in caselle.
+  // rowsPerPowerUp    → un power-up ogni N righe: il numero di rami per livello
+  //                     è floor(H / rowsPerPowerUp), distribuiti lungo la plancia.
+  // minLength/maxLength → lunghezza di ciascun ramo, in caselle.
   // In fondo a ogni ramo c'è un power-up; mai sul percorso principale.
   branches: {
-    minPerLevel: 1,
-    maxPerLevel: 3,
+    rowsPerPowerUp: 3,
     minLength: 1,
     maxLength: 3,
   },

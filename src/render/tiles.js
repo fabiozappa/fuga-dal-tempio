@@ -9,6 +9,7 @@ const COLORS = {
   off:       0x161622, // spenta
   unlocked:  0x2f5d8f, // sbloccata (illuminata per tutto il round)
   path:      0x0e7c8a, // percorso rivelato (anteprima / rivelatore)
+  branch:    0x9c7b2e, // deviazione verso un power-up (ramo cieco rivelato)
   power:     0xc99a2e, // casella con power-up rivelato
   collected: 0x264a63, // sbloccata, power-up già raccolto
   error:     0xc0392b, // lampeggio su casella sbagliata
@@ -88,11 +89,13 @@ export class TileGrid {
     for (const [key, mesh] of this.tiles) {
       const unlocked = snap.unlocked.has(key);
       const isPath = snap.pathKeys.has(key);
+      const isBranch = snap.branchKeys.has(key);
       const pu = puByKey.get(key);
 
       let color = COLORS.off;
       let active = false;
       if (snap.reveal && isPath && !unlocked) { color = COLORS.path; active = true; }
+      if (snap.reveal && isBranch && !unlocked) { color = COLORS.branch; active = true; }
       if (snap.reveal && pu && !pu.collected) { color = COLORS.power; active = true; }
       if (unlocked) { color = pu && pu.collected ? COLORS.collected : COLORS.unlocked; active = true; }
       if (errorFlash && errorFlash.key === key && now < errorFlash.until) {

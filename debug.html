@@ -8,6 +8,7 @@
     :root {
       --off:      #15151d;
       --path:     #0e7c8a;
+      --branch:   #9c7b2e;
       --power:    #c99a2e;
       --unlocked: #2f5d8f;
       --collected:#264a63;
@@ -42,6 +43,7 @@
       background: var(--off);
     }
     .cell.path      { background: var(--path); }
+    .cell.branch    { background: var(--branch); color: #201800; }
     .cell.power     { background: var(--power); color: #201800; }
     .cell.unlocked  { background: var(--unlocked); }
     .cell.collected { background: var(--collected); }
@@ -201,11 +203,13 @@
         const key = d.dataset.key;
         const unlocked = snap.unlocked.has(key);
         const isPath = snap.pathKeys.has(key);
+        const isBranch = snap.branchKeys.has(key);
         const pu = puByKey.get(key);
 
         let cls = 'cell';
-        // Percorso e power-up visibili solo quando "rivelati".
+        // Percorso, deviazioni e power-up visibili solo quando "rivelati".
         if (snap.reveal && isPath && !unlocked) cls += ' path';
+        if (snap.reveal && isBranch && !unlocked) cls += ' branch';
         if (snap.reveal && pu && !pu.collected) cls += ' power';
         if (unlocked) cls += pu && pu.collected ? ' collected' : ' unlocked';
         if (errorFlash.key === key && now < errorFlash.until) cls += ' error';

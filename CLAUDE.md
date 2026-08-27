@@ -69,12 +69,14 @@ Pilastri: **memoria visiva**, **inseguimento in tempo reale**, **risk vs. reward
 - Il percorso corretto è una sequenza continua di caselle adiacenti dalla riga 0
   all'ultima riga (sono ammessi spostamenti laterali nel tracciato).
 - Dal percorso principale si diramano **rami ciechi** di 1–3 caselle, con un
-  power-up in fondo.
+  power-up in fondo. Il numero di power-up è `floor(H / rowsPerPowerUp)` (di
+  default uno ogni ~3 righe), distribuiti lungo la plancia.
 
 ### Fasi del round
 
-1. **PREVIEW** — il percorso corretto si illumina (ciano il tracciato, dorato i
-   power-up) per la durata da config. Input disabilitato.
+1. **PREVIEW** — il percorso corretto si illumina (ciano il tracciato, ambra le
+   deviazioni verso i rami, dorato i power-up) per la durata da config. Input
+   disabilitato.
 2. **FUGA** — tutto si spegne tranne le caselle già sbloccate. Il giocatore si
    muove. Il villain è fermo.
 3. **INSEGUIMENTO** — scaduto il vantaggio iniziale, il villain parte e avanza a
@@ -136,7 +138,7 @@ export const CONFIG = {
   },
   lives:   { start: 3, max: 5 },
   powerUps:{ freezeMs: 4000, revealMs: 2500 },
-  branches:{ minPerLevel: 1, maxPerLevel: 3, minLength: 1, maxLength: 3 },
+  branches:{ rowsPerPowerUp: 3, minLength: 1, maxLength: 3 },
 };
 ```
 
