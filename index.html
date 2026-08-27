@@ -23,9 +23,14 @@
       background: #0a0a12; color: #e0e0f0;
       font-family: ui-monospace, Menlo, Consolas, monospace;
       overflow: hidden;
+      /* Mobile: niente scroll/bounce né gesti di zoom accidentali. */
+      touch-action: none;
+      overscroll-behavior: none;
+      -webkit-user-select: none; user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
     /* Contenitore della scena Three.js: occupa tutto lo schermo. */
-    #game { position: fixed; inset: 0; }
+    #game { position: fixed; inset: 0; touch-action: none; }
     #game canvas { display: block; }
 
     /* HUD overlay minimale (l'HUD completo è materia di Fase 4). */
@@ -42,9 +47,40 @@
     #phase { opacity: .8; letter-spacing: .08em; font-size: .8rem; }
     #lives { color: #ff6b5b; letter-spacing: .12em; font-size: 1.1rem; }
     #banner {
-      margin-top: auto; margin-bottom: 12vh; text-align: center;
+      margin-top: auto; margin-bottom: 30vh; text-align: center;
       font-weight: 700; letter-spacing: .04em; font-size: 1.1rem;
       text-shadow: 0 2px 8px #000;
+    }
+
+    /* D-Pad touch: croce in basso al centro. Riceve gli eventi (gli altri
+       elementi dell'HUD restano pointer-events:none). */
+    #dpad {
+      position: fixed; left: 50%; transform: translateX(-50%);
+      bottom: max(env(safe-area-inset-bottom, 0), 4vh);
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      grid-template-areas: ".  up  ." "lt .  rt" ".  dn .";
+      gap: 8px; pointer-events: auto; touch-action: none;
+    }
+    .db {
+      width: 62px; height: 62px; font-size: 1.4rem;
+      color: #dfe7ff; background: rgba(40, 52, 82, 0.55);
+      border: 1px solid rgba(140, 170, 230, 0.35); border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      touch-action: none; -webkit-user-select: none; user-select: none;
+      backdrop-filter: blur(2px);
+    }
+    .db.active { background: rgba(90, 120, 190, 0.85); }
+    .db.up { grid-area: up; } .db.down { grid-area: dn; }
+    .db.left { grid-area: lt; } .db.right { grid-area: rt; }
+
+    /* Restart: angolo in basso a destra, lontano dal D-Pad. */
+    #restart {
+      position: fixed; right: .8rem;
+      bottom: max(env(safe-area-inset-bottom, 0), 4vh);
+      width: 46px; height: 46px; font-size: 1.2rem;
+      color: #dfe7ff; background: rgba(40, 52, 82, 0.55);
+      border: 1px solid rgba(140, 170, 230, 0.35); border-radius: 12px;
+      pointer-events: auto; touch-action: none;
     }
   </style>
 </head>
@@ -59,6 +95,15 @@
     </div>
     <div id="banner"></div>
   </div>
+
+  <!-- D-Pad touch (Fase 3). Su desktop resta usabile col mouse. -->
+  <div id="dpad">
+    <button class="db up" data-dir="up" aria-label="su">▲</button>
+    <button class="db left" data-dir="left" aria-label="sinistra">◀</button>
+    <button class="db right" data-dir="right" aria-label="destra">▶</button>
+    <button class="db down" data-dir="down" aria-label="giù">▼</button>
+  </div>
+  <button id="restart" aria-label="ricomincia">↺</button>
 
   <!-- Punto di ingresso caricato dinamicamente sotto un prefisso con timestamp
        (/nc/<ts>/, rimosso dall'.htaccess): a ogni reload l'URL cambia, così i

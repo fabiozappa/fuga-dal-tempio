@@ -67,6 +67,7 @@ export class GameState {
     this.headStartRemainingMs = this.config.timing.villainHeadStartMs;
     this.freezeRemainingMs = 0;
     this.revealRemainingMs = 0;
+    this.stepCooldownRemainingMs = 0;
     this.lastError = null;
 
     this.phase = PHASES.PREVIEW;
@@ -76,6 +77,12 @@ export class GameState {
   // --- Loop temporale ------------------------------------------------------
 
   update(dtMs) {
+    // Cooldown dei passi del giocatore: scorre sempre, così è pronto quando
+    // inizia la FUGA. Un passo per input, con questa attesa minima tra due.
+    if (this.stepCooldownRemainingMs > 0) {
+      this.stepCooldownRemainingMs = Math.max(0, this.stepCooldownRemainingMs - dtMs);
+    }
+
     switch (this.phase) {
       case PHASES.PREVIEW:
         this.updatePreview(dtMs);
@@ -170,17 +177,22 @@ export class GameState {
   // --- Input del giocatore -------------------------------------------------
 
   // Muove il giocatore di un passo nella direzione data ('up'|'down'|'left'|
-  // 'right'). Consentito solo in FUGA e INSEGUIMENTO.
+  // 'right'). Consentito solo in FUGA e INSEGUIMENTO. Può essere chiamata ad
+  // ogni frame tenendo premuto: il cooldown limita a un passo per volta.
   movePlayer(direction) {
     if (this.phase !== PHASES.FUGA && this.phase !== PHASES.CHASE) return;
+    if (this.stepCooldownRemainingMs > 0) return; // troppo presto dal passo scorso
     const d = DIRECTIONS[direction];
     if (!d) return;
 
     const nx = this.player.x + d.dx;
     const ny = this.player.y + d.dy;
 
-    // Fuori griglia: input ignorato, nessuna penalità.
+    // Fuori griglia: input ignorato, nessuna penalità e nessun cooldown.
     if (!inBounds(nx, ny, this.width, this.height)) return;
+
+    // Input accettato: avvia il cooldown (vale sia per passi validi che errati).
+    this.stepCooldownRemainingMs = this.config.timing.playerStepCooldownMs;
 
     const key = cellKey(nx, ny);
 

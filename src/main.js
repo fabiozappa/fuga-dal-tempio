@@ -7,6 +7,7 @@ import { cellKey } from './core/grid.js';
 import { POWERUP_LABELS } from './core/powerUps.js';
 import { GameRenderer } from './render/scene.js';
 import { createKeyboard } from './input/keyboard.js';
+import { createTouchDpad } from './input/touch.js';
 
 const PHASE_LABEL = {
   [PHASES.PREVIEW]: 'ANTEPRIMA',
@@ -27,12 +28,19 @@ const $ = (id) => document.getElementById(id);
 let banner = { text: '', until: 0 };
 let errorFlash = { key: null, until: 0 };
 
-createKeyboard({
-  onMove: (dir) => game.movePlayer(dir),
-  onRestart: () => { game.startGame(); banner = { text: '', until: 0 }; },
-});
+// Stato dell'input condiviso: `heldDir` è la direzione tenuta premuta (tastiera
+// o D-Pad). Il core applica il cooldown, quindi si può chiamare movePlayer ad
+// ogni frame senza timer nell'input.
+const input = { heldDir: null };
+const step = (dir) => game.movePlayer(dir);
+const restart = () => { game.startGame(); banner = { text: '', until: 0 }; };
 
-window.addEventListener('resize', () => renderer.resize());
+createKeyboard({ input, onPress: step, onRestart: restart });
+createTouchDpad({ input, onPress: step, onRestart: restart });
+
+const onResize = () => renderer.resize();
+window.addEventListener('resize', onResize);
+window.addEventListener('orientationchange', onResize);
 
 function handleEvents(now) {
   for (const e of game.drainEvents()) {
@@ -73,6 +81,8 @@ function frame(now) {
   if (dt > 250) dt = 250; // clamp: evita salti enormi (scheda in background)
 
   game.update(dt);
+  // Movimento continuo tenendo premuto: il core limita col cooldown.
+  if (input.heldDir) game.movePlayer(input.heldDir);
   handleEvents(now);
 
   const snap = game.getSnapshot();

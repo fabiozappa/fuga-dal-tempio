@@ -197,11 +197,12 @@ record in `localStorage`.
 
 ## Stato attuale
 
-**Fase 2** — completata. Rendering isometrico in `src/render/` (scena, camera
-ortografica a 45° con frustum adattivo, tile con materiali per stato, capsule di
-giocatore e villain, gemme dei power-up). `main.js` collega core + render + input
-(tastiera). `index.html` mostra il gioco in 3D; `debug.html` resta funzionante.
-Prossima: Fase 3 (input, cooldown, D-Pad touch, mobile).
+**Fase 3** — completata. Input e mobile: cooldown dei passi nel core (delta-time,
+un passo per input, cadenza costante tenendo premuto), D-Pad touch (`src/input/
+touch.js`) con rilascio robusto a livello di window, layout verticale senza
+zoom/scroll (`touch-action`, `overscroll-behavior`), pulsante restart, gestione
+resize/orientationchange. `debug.html` resta funzionante.
+Prossima: Fase 4 (power-up: raccolta, effetti gelo/rivelatore, HUD completo).
 
 ---
 
