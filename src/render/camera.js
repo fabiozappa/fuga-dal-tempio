@@ -4,12 +4,12 @@
 
 import * as THREE from 'three';
 
-// Orientamento della vista, in gradi. Un leggero azimut (~22°) mantiene un
-// accenno di prospettiva isometrica — profondità visibile sui lati delle
-// caselle — restando "quasi dritto" e con controlli leggibili. L'elevazione
-// (~35°) è quella isometrica classica. Ritoccare qui per cambiare la vista.
-const AZIMUTH_DEG = 22;
-const ELEVATION_DEG = 35;
+// Orientamento della vista, in gradi. Con azimut 0 la vista è frontale: colonne
+// orizzontali sullo schermo e traguardo dritto in alto, controlli leggibili.
+// Alzando l'azimut si recupera un accenno di prospettiva isometrica (profondità
+// sui lati delle caselle). L'elevazione è il pitch. Ritoccare qui per cambiare.
+const AZIMUTH_DEG = 0;
+const ELEVATION_DEG = 45;
 
 const AZ = (AZIMUTH_DEG * Math.PI) / 180;
 const EL = (ELEVATION_DEG * Math.PI) / 180;
