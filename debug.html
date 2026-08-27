@@ -102,10 +102,15 @@
   </div>
 
   <script type="module">
-    import { CONFIG } from './src/config.js';
-    import { GameState, PHASES } from './src/core/gameState.js';
-    import { POWERUP_LABELS } from './src/core/powerUps.js';
-    import { cellKey } from './src/core/grid.js';
+    // Import dinamici sotto un prefisso con timestamp (/nc/<ts>/, rimosso
+    // dall'.htaccess): a ogni reload gli URL cambiano, così i moduli non
+    // vengono mai serviti dalla cache. Il prefisso si propaga agli import
+    // relativi interni ai moduli.
+    const _v = Date.now();
+    const { CONFIG } = await import(`/nc/${_v}/src/config.js`);
+    const { GameState, PHASES } = await import(`/nc/${_v}/src/core/gameState.js`);
+    const { POWERUP_LABELS } = await import(`/nc/${_v}/src/core/powerUps.js`);
+    const { cellKey } = await import(`/nc/${_v}/src/core/grid.js`);
 
     const PHASE_LABEL = {
       [PHASES.PREVIEW]: 'ANTEPRIMA',

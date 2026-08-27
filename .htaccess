@@ -1,0 +1,13 @@
+# Anti-cache per lo sviluppo.
+#
+# I moduli JS del gioco vengono caricati sotto un prefisso "versionato" con
+# timestamp (/nc/<numero>/...) generato a ogni reload: il browser vede sempre
+# URL nuovi e non serve mai versioni vecchie dalla cache. Questa regola rimuove
+# il prefisso e serve il file reale.
+RewriteEngine On
+RewriteRule ^nc/[0-9]+/(.*)$ $1 [L]
+
+# L'HTML di ingresso non può auto-versionarsi: lo serviamo sempre fresco.
+<FilesMatch "\.html$">
+  Header set Cache-Control "no-store, must-revalidate"
+</FilesMatch>

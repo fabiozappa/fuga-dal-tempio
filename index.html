@@ -60,7 +60,13 @@
     <div id="banner"></div>
   </div>
 
-  <!-- Punto di ingresso: collega core + render + input. -->
-  <script type="module" src="./src/main.js"></script>
+  <!-- Punto di ingresso caricato dinamicamente sotto un prefisso con timestamp
+       (/nc/<ts>/, rimosso dall'.htaccess): a ogni reload l'URL cambia, così i
+       moduli JS non vengono mai serviti dalla cache. Il prefisso si propaga
+       automaticamente a tutti gli import relativi del grafo. Three.js resta
+       invece cachato (risolto via importmap, senza timestamp). -->
+  <script type="module">
+    import(`/nc/${Date.now()}/src/main.js`);
+  </script>
 </body>
 </html>
