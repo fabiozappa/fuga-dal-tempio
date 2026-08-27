@@ -23,6 +23,9 @@ const renderer = new GameRenderer(container);
 const game = new GameState({ config: CONFIG });
 game.startGame();
 
+// Handle di debug: comodo per ispezionare o pilotare lo stato dalla console.
+window.game = game;
+
 // HUD (DOM). L'HUD completo è materia di Fase 4: qui il minimo per giocare.
 const $ = (id) => document.getElementById(id);
 let banner = { text: '', until: 0 };
@@ -70,7 +73,23 @@ function handleEvents(now) {
 function renderHud(snap, now) {
   $('level').textContent = 'Livello ' + snap.level;
   $('phase').textContent = PHASE_LABEL[snap.phase] || snap.phase;
-  $('lives').textContent = '♥'.repeat(Math.max(0, snap.lives)) || '—';
+
+  // Vite: cuori pieni fino a snap.lives, "vuoti" fino al massimo da config.
+  const n = Math.max(0, snap.lives);
+  const empty = Math.max(0, CONFIG.lives.max - n);
+  $('lives').innerHTML =
+    `<span class="on">${'♥'.repeat(n)}</span><span class="off">${'♥'.repeat(empty)}</span>`;
+
+  // Effetti attivi con countdown in secondi.
+  const fx = [];
+  if (snap.timers.freezeMs > 0) {
+    fx.push(`<span class="fx freeze">❄ Gelo ${(snap.timers.freezeMs / 1000).toFixed(1)}s</span>`);
+  }
+  if (snap.timers.revealMs > 0) {
+    fx.push(`<span class="fx reveal">◉ Rivelatore ${(snap.timers.revealMs / 1000).toFixed(1)}s</span>`);
+  }
+  $('effects').innerHTML = fx.join('');
+
   $('banner').textContent = now < banner.until ? banner.text : '';
 }
 

@@ -7,6 +7,7 @@ import { SCREEN_RIGHT } from './camera.js';
 
 const PLAYER_COLOR = 0x2ecc71;
 const VILLAIN_COLOR = 0xe74c3c;
+const VILLAIN_FROZEN_COLOR = 0x6fc7e0; // tinta ghiaccio quando è congelato (Gelo)
 
 function makeCapsule(color) {
   const geo = new THREE.CapsuleGeometry(0.26, 0.5, 4, 12);
@@ -42,5 +43,12 @@ export class Actors {
     this.villain.position.set(
       v.x - SEP_DIR.x * SEP, standY, v.z - SEP_DIR.z * SEP
     );
+
+    // Feedback del Gelo: il villain diventa color ghiaccio finché è congelato.
+    const frozen = snap.timers.freezeMs > 0;
+    const tint = frozen ? VILLAIN_FROZEN_COLOR : VILLAIN_COLOR;
+    this.villain.material.color.setHex(tint);
+    this.villain.material.emissive.setHex(tint);
+    this.villain.material.emissiveIntensity = frozen ? 0.5 : 0.25;
   }
 }

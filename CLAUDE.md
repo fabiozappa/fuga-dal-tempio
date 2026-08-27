@@ -197,12 +197,12 @@ record in `localStorage`.
 
 ## Stato attuale
 
-**Fase 3** — completata. Input e mobile: cooldown dei passi nel core (delta-time,
-un passo per input, cadenza costante tenendo premuto), D-Pad touch (`src/input/
-touch.js`) con rilascio robusto a livello di window, layout verticale senza
-zoom/scroll (`touch-action`, `overscroll-behavior`), pulsante restart, gestione
-resize/orientationchange. `debug.html` resta funzionante.
-Prossima: Fase 4 (power-up: raccolta, effetti gelo/rivelatore, HUD completo).
+**Fase 4** — completata. Power-up: piazzamento nei rami ciechi e raccolta (core,
+già da Fase 1), effetti Vita Extra / Gelo / Rivelatore. HUD con vite (cuori
+pieni/vuoti fino al massimo) e chip degli effetti attivi con countdown. Feedback
+visivo: il villain diventa color ghiaccio quando è congelato; il Rivelatore
+riaccende il percorso. `window.game` esposto come handle di debug.
+Prossima: Fase 5 (juice: animazioni, lampeggi, interpolazione, audio, vibrazione).
 
 ---
 

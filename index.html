@@ -45,7 +45,24 @@
     }
     #level { font-weight: 700; }
     #phase { opacity: .8; letter-spacing: .08em; font-size: .8rem; }
-    #lives { color: #ff6b5b; letter-spacing: .12em; font-size: 1.1rem; }
+    #lives { letter-spacing: .12em; font-size: 1.1rem; }
+    #lives .on { color: #ff6b5b; }
+    #lives .off { color: #4a2c33; }
+
+    /* Effetti attivi: chip con countdown, in alto a sinistra sotto il livello. */
+    #effects {
+      padding: .35rem .9rem 0;
+      display: flex; gap: .4rem; flex-wrap: wrap;
+      font-size: .78rem;
+    }
+    .fx {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .12rem .5rem; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .fx.freeze { color: #6fc7e0; border-color: rgba(111, 199, 224, 0.5); }
+    .fx.reveal { color: #e8c04a; border-color: rgba(232, 192, 74, 0.5); }
     #banner {
       margin-top: auto; margin-bottom: 30vh; text-align: center;
       font-weight: 700; letter-spacing: .04em; font-size: 1.1rem;
@@ -93,6 +110,7 @@
       <span id="phase"></span>
       <span id="lives"></span>
     </div>
+    <div id="effects"></div>
     <div id="banner"></div>
   </div>
 
