@@ -53,6 +53,8 @@ Pilastri: **memoria visiva**, **inseguimento in tempo reale**, **risk vs. reward
 │   ├── input/
 │   │   ├── keyboard.js
 │   │   └── touch.js
+│   ├── audio/
+│   │   └── sound.js    → suoni procedurali (Web Audio, nessun file esterno)
 │   └── main.js         → collega core + render + input
 └── assets/
 ```
@@ -197,12 +199,13 @@ record in `localStorage`.
 
 ## Stato attuale
 
-**Fase 4** — completata. Power-up: piazzamento nei rami ciechi e raccolta (core,
-già da Fase 1), effetti Vita Extra / Gelo / Rivelatore. HUD con vite (cuori
-pieni/vuoti fino al massimo) e chip degli effetti attivi con countdown. Feedback
-visivo: il villain diventa color ghiaccio quando è congelato; il Rivelatore
-riaccende il percorso. `window.game` esposto come handle di debug.
-Prossima: Fase 5 (juice: animazioni, lampeggi, interpolazione, audio, vibrazione).
+**Fase 5** — completata. Juice: interpolazione morbida dei movimenti (smoothing
+esponenziale in `render/actors.js`), pulsazione delle caselle in anteprima,
+lampeggio errore più marcato, audio procedurale (`src/audio/sound.js`, Web Audio,
+niente file) con suoni per passo/errore/power-up/cattura/vittoria/game-over,
+vibrazione mobile su errore/raccolta/cattura, pulsante mute. `window.game`
+resta come handle di debug.
+Prossima: Fase 6 (progressione: difficoltà per livello, titolo/game over, record).
 
 ---
 

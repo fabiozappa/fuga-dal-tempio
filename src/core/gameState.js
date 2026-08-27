@@ -202,6 +202,7 @@ export class GameState {
       this.playerTrail.push({ x: nx, y: ny });
       this.unlocked.add(key);
       this.lastError = null;
+      this.emit('step', { cell: { x: nx, y: ny } });
 
       this.collectPowerUpAt(nx, ny);
 

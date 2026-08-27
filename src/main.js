@@ -8,6 +8,7 @@ import { POWERUP_LABELS } from './core/powerUps.js';
 import { GameRenderer } from './render/scene.js';
 import { createKeyboard } from './input/keyboard.js';
 import { createTouchDpad } from './input/touch.js';
+import { Sound } from './audio/sound.js';
 
 const PHASE_LABEL = {
   [PHASES.PREVIEW]: 'ANTEPRIMA',
@@ -31,15 +32,31 @@ const $ = (id) => document.getElementById(id);
 let banner = { text: '', until: 0 };
 let errorFlash = { key: null, until: 0 };
 
+// Audio procedurale. Va "risvegliato" al primo gesto dell'utente.
+const sound = new Sound();
+
+// Vibrazione mobile (se supportata).
+const vibrate = (pattern) => { if (navigator.vibrate) navigator.vibrate(pattern); };
+
 // Stato dell'input condiviso: `heldDir` è la direzione tenuta premuta (tastiera
 // o D-Pad). Il core applica il cooldown, quindi si può chiamare movePlayer ad
 // ogni frame senza timer nell'input.
 const input = { heldDir: null };
-const step = (dir) => game.movePlayer(dir);
-const restart = () => { game.startGame(); banner = { text: '', until: 0 }; };
+const step = (dir) => { sound.resume(); game.movePlayer(dir); };
+const restart = () => { sound.resume(); game.startGame(); banner = { text: '', until: 0 }; };
 
 createKeyboard({ input, onPress: step, onRestart: restart });
 createTouchDpad({ input, onPress: step, onRestart: restart });
+
+// Pulsante mute (se presente nel DOM).
+const muteBtn = $('mute');
+if (muteBtn) {
+  muteBtn.addEventListener('pointerdown', (ev) => {
+    ev.preventDefault();
+    const muted = sound.toggleMute();
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+  });
+}
 
 const onResize = () => renderer.resize();
 window.addEventListener('resize', onResize);
@@ -48,22 +65,34 @@ window.addEventListener('orientationchange', onResize);
 function handleEvents(now) {
   for (const e of game.drainEvents()) {
     switch (e.type) {
+      case 'step':
+        sound.step();
+        break;
       case 'wrongStep':
         errorFlash = { key: cellKey(e.cell.x, e.cell.y), until: now + 350 };
+        sound.error();
+        vibrate(60);
         break;
       case 'powerUp':
         banner = { text: POWERUP_LABELS[e.kind] || 'Power-up', until: now + 1200 };
+        sound.powerUp();
+        vibrate([25, 40, 25]);
         break;
       case 'capture':
         banner = { text: 'CATTURATO!', until: now + 1500 };
+        sound.capture();
+        vibrate(120);
         break;
       case 'win':
         banner = { text: 'LIVELLO ' + e.level + ' SUPERATO!', until: now + 1500 };
+        sound.win();
         game.nextLevel();
         break;
       case 'gameOver': {
         const why = e.reason === 'villainFinish' ? 'il villain è arrivato' : 'vite esaurite';
         banner = { text: 'GAME OVER — ' + why + ' (premi R)', until: Infinity };
+        sound.gameOver();
+        vibrate([80, 60, 80]);
         break;
       }
     }
@@ -105,7 +134,7 @@ function frame(now) {
   handleEvents(now);
 
   const snap = game.getSnapshot();
-  renderer.sync(snap, now, errorFlash);
+  renderer.sync(snap, now, dt, errorFlash);
   renderHud(snap, now);
 
   requestAnimationFrame(frame);

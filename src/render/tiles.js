@@ -86,6 +86,10 @@ export class TileGrid {
   update(snap, now, errorFlash) {
     const puByKey = new Map(snap.powerUps.map((p) => [cellKey(p.x, p.y), p]));
 
+    // Pulsazione morbida per le caselle rivelate (anteprima / rivelatore): le
+    // fa "respirare" così l'anteprima è viva invece che statica.
+    const pulse = 0.7 + 0.3 * Math.sin(now * 0.006);
+
     for (const [key, mesh] of this.tiles) {
       const unlocked = snap.unlocked.has(key);
       const isPath = snap.pathKeys.has(key);
@@ -94,17 +98,20 @@ export class TileGrid {
 
       let color = COLORS.off;
       let active = false;
-      if (snap.reveal && isPath && !unlocked) { color = COLORS.path; active = true; }
-      if (snap.reveal && isBranch && !unlocked) { color = COLORS.branch; active = true; }
-      if (snap.reveal && pu && !pu.collected) { color = COLORS.power; active = true; }
-      if (unlocked) { color = pu && pu.collected ? COLORS.collected : COLORS.unlocked; active = true; }
-      if (errorFlash && errorFlash.key === key && now < errorFlash.until) {
-        color = COLORS.error; active = true;
-      }
+      let revealed = false; // colorata dal "reveal" (pulsa), non da sblocco/errore
+      if (snap.reveal && isPath && !unlocked) { color = COLORS.path; active = true; revealed = true; }
+      if (snap.reveal && isBranch && !unlocked) { color = COLORS.branch; active = true; revealed = true; }
+      if (snap.reveal && pu && !pu.collected) { color = COLORS.power; active = true; revealed = true; }
+      if (unlocked) { color = pu && pu.collected ? COLORS.collected : COLORS.unlocked; active = true; revealed = false; }
+      const isError = errorFlash && errorFlash.key === key && now < errorFlash.until;
+      if (isError) { color = COLORS.error; active = true; revealed = false; }
 
       mesh.material.color.setHex(color);
       mesh.material.emissive.setHex(color);
-      mesh.material.emissiveIntensity = active ? 0.4 : 0.0;
+      let intensity = active ? 0.4 : 0.0;
+      if (revealed) intensity *= pulse;
+      if (isError) intensity = 0.9; // lampeggio errore ben acceso
+      mesh.material.emissiveIntensity = intensity;
     }
 
     // Gemme visibili solo quando il percorso è rivelato e non ancora raccolte.

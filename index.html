@@ -90,15 +90,17 @@
     .db.up { grid-area: up; } .db.down { grid-area: dn; }
     .db.left { grid-area: lt; } .db.right { grid-area: rt; }
 
-    /* Restart: angolo in basso a destra, lontano dal D-Pad. */
-    #restart {
-      position: fixed; right: .8rem;
+    /* Restart e mute: angoli in basso, lontani dal D-Pad. */
+    #restart, #mute {
+      position: fixed;
       bottom: max(env(safe-area-inset-bottom, 0), 4vh);
       width: 46px; height: 46px; font-size: 1.2rem;
       color: #dfe7ff; background: rgba(40, 52, 82, 0.55);
       border: 1px solid rgba(140, 170, 230, 0.35); border-radius: 12px;
       pointer-events: auto; touch-action: none;
     }
+    #restart { right: .8rem; }
+    #mute { left: .8rem; }
   </style>
 </head>
 <body>
@@ -122,6 +124,7 @@
     <button class="db down" data-dir="down" aria-label="giù">▼</button>
   </div>
   <button id="restart" aria-label="ricomincia">↺</button>
+  <button id="mute" aria-label="audio">🔊</button>
 
   <!-- Punto di ingresso: collega core + render + input. Percorso relativo, così
        il gioco funziona in qualsiasi cartella (radice o sottocartella). L'anti-

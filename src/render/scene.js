@@ -41,6 +41,7 @@ export class GameRenderer {
   setDimensions(width, height, powerUps) {
     this.tiles.build(width, height, powerUps);
     this.dimKey = width + 'x' + height;
+    this.actors.reset(); // niente scivolata degli attori al cambio livello
     this.refitCamera();
   }
 
@@ -54,13 +55,13 @@ export class GameRenderer {
   }
 
   // Disegna lo snapshot. Ricostruisce la griglia se le dimensioni sono cambiate.
-  sync(snap, now, errorFlash) {
+  sync(snap, now, dtMs, errorFlash) {
     const dimKey = snap.width + 'x' + snap.height;
     if (dimKey !== this.dimKey) {
       this.setDimensions(snap.width, snap.height, snap.powerUps);
     }
     this.tiles.update(snap, now, errorFlash);
-    this.actors.update(snap, this.tiles);
+    this.actors.update(snap, this.tiles, dtMs);
     this.renderer.render(this.scene, this.camera);
   }
 
