@@ -123,13 +123,9 @@
   </div>
   <button id="restart" aria-label="ricomincia">↺</button>
 
-  <!-- Punto di ingresso caricato dinamicamente sotto un prefisso con timestamp
-       (/nc/<ts>/, rimosso dall'.htaccess): a ogni reload l'URL cambia, così i
-       moduli JS non vengono mai serviti dalla cache. Il prefisso si propaga
-       automaticamente a tutti gli import relativi del grafo. Three.js resta
-       invece cachato (risolto via importmap, senza timestamp). -->
-  <script type="module">
-    import(`/nc/${Date.now()}/src/main.js`);
-  </script>
+  <!-- Punto di ingresso: collega core + render + input. Percorso relativo, così
+       il gioco funziona in qualsiasi cartella (radice o sottocartella). L'anti-
+       cache è gestito dagli header dell'.htaccess (opzionale). -->
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>

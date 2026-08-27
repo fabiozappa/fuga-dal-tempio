@@ -1,13 +1,12 @@
-# Anti-cache per lo sviluppo.
+# Anti-cache per lo sviluppo (opzionale).
 #
-# I moduli JS del gioco vengono caricati sotto un prefisso "versionato" con
-# timestamp (/nc/<numero>/...) generato a ogni reload: il browser vede sempre
-# URL nuovi e non serve mai versioni vecchie dalla cache. Questa regola rimuove
-# il prefisso e serve il file reale.
-RewriteEngine On
-RewriteRule ^nc/[0-9]+/(.*)$ $1 [L]
-
-# L'HTML di ingresso non può auto-versionarsi: lo serviamo sempre fresco.
-<FilesMatch "\.html$">
-  Header set Cache-Control "no-store, must-revalidate"
-</FilesMatch>
+# Serve HTML/CSS/JS senza cache, così durante lo sviluppo le modifiche si vedono
+# subito senza dover svuotare la cache del browser. Richiede mod_headers; se non
+# disponibile o se il file non viene copiato, il gioco funziona comunque (con la
+# normale cache del browser). Nessuna dipendenza per il caricamento dei moduli:
+# gli import sono relativi, quindi il gioco gira in qualsiasi cartella.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|css)$">
+    Header set Cache-Control "no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>
