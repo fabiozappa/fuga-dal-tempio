@@ -35,8 +35,8 @@ export class TileGrid {
     this.gems = [];           // { mesh, x, y }
 
     this.stoneTex = makeStoneTexture();
-    // Blocchi di pietra più massicci, con fuga (malta) tra l'uno e l'altro.
-    this.tileGeo = new THREE.BoxGeometry(0.9 * spacing, 0.34, 0.9 * spacing);
+    // Blocchi di pietra massicci, con fuga (malta) profonda tra l'uno e l'altro.
+    this.tileGeo = new THREE.BoxGeometry(0.82 * spacing, 0.55, 0.82 * spacing);
     this.gemGeo = new THREE.OctahedronGeometry(0.2 * spacing);
     this.gemMat = new THREE.MeshStandardMaterial({
       color: GEM_COLOR, emissive: GEM_COLOR, emissiveIntensity: 0.7,
@@ -73,12 +73,13 @@ export class TileGrid {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const mat = new THREE.MeshStandardMaterial({
-          map: this.stoneTex, color: COLORS.off,
-          emissive: COLORS.off, emissiveIntensity: 0, roughness: 0.9, metalness: 0.05,
+          map: this.stoneTex, bumpMap: this.stoneTex, bumpScale: 0.08,
+          color: COLORS.off, emissive: COLORS.off, emissiveIntensity: 0,
+          roughness: 0.95, metalness: 0.04,
         });
         const mesh = new THREE.Mesh(this.tileGeo, mat);
         const p = this.worldPos(x, y);
-        mesh.position.set(p.x, -0.17, p.z); // faccia superiore a y=0
+        mesh.position.set(p.x, -0.275, p.z); // faccia superiore a y=0
         this.tiles.set(cellKey(x, y), mesh);
         this.group.add(mesh);
       }
