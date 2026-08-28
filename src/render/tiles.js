@@ -23,6 +23,39 @@ const COLORS = {
   error:     0xc0392b,
 };
 const GEM_COLOR = 0xf5c542;
+const TILE_THICK = 0.1;      // spessore del vetro
+const TILE_BEVEL = 0.02;     // smusso dello spigolo superiore
+
+// Rettangolo con angoli stondati, centrato nell'origine.
+function roundedRectShape(w, h, r) {
+  const s = new THREE.Shape();
+  const x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y);
+  s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r);
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h);
+  s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r);
+  s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+
+// Geometria di una tile: lastra di vetro con angoli stondati e spigolo smussato.
+// w,h = ingombro finale (bevel incluso); la faccia superiore è portata a y=0.
+function makeTileGeometry(w, h) {
+  const sw = w - 2 * TILE_BEVEL, sh = h - 2 * TILE_BEVEL;
+  const r = Math.min(sw, sh) * 0.22;
+  const geo = new THREE.ExtrudeGeometry(roundedRectShape(sw, sh, r), {
+    depth: TILE_THICK - 2 * TILE_BEVEL, curveSegments: 6,
+    bevelEnabled: true, bevelThickness: TILE_BEVEL, bevelSize: TILE_BEVEL, bevelSegments: 1,
+  });
+  geo.rotateX(-Math.PI / 2);
+  geo.computeBoundingBox();
+  geo.translate(0, -geo.boundingBox.max.y, 0); // faccia superiore a y=0
+  return geo;
+}
 
 export class TileGrid {
   constructor(spacing = 1) {
@@ -35,7 +68,6 @@ export class TileGrid {
 
     // Caselle di vetro smerigliato: si posano sul cortile dipinto (che traspare
     // sfocato) e si illuminano come rune del tempio.
-    this.tileGeo = new THREE.BoxGeometry(0.9 * spacing, 0.1, 0.9 * spacing);
     this.glassColor = new THREE.Color(0xcfe0dd);
     this.gemGeo = new THREE.OctahedronGeometry(0.2 * spacing);
     this.gemMat = new THREE.MeshStandardMaterial({
@@ -57,9 +89,9 @@ export class TileGrid {
 
   // (Ri)costruisce la griglia per le dimensioni date. Chiamata quando cambia H.
   build(width, height, powerUps) {
-    // Pulisce la griglia precedente.
+    // Pulisce la griglia precedente (geometria per-tile: va liberata).
     for (const mesh of this.tiles.values()) {
-      mesh.geometry = null;
+      mesh.geometry.dispose();
       mesh.material.dispose();
       this.group.remove(mesh);
     }
@@ -78,9 +110,14 @@ export class TileGrid {
           clearcoat: 0.5, clearcoatRoughness: 0.35,
           emissive: 0x000000, emissiveIntensity: 0,
         });
-        const mesh = new THREE.Mesh(this.tileGeo, mat);
+        // Ingombro casuale 85–100% della cella (indipendente su x e z): la
+        // griglia resta fissa, le tile dentro sono irregolari.
+        const w = this.spacing * (0.85 + Math.random() * 0.15);
+        const d = this.spacing * (0.85 + Math.random() * 0.15);
+        const mesh = new THREE.Mesh(makeTileGeometry(w, d), mat);
         const p = this.worldPos(x, y);
         mesh.position.set(p.x, -0.05, p.z); // faccia superiore a y=0
+        mesh.rotation.y = (Math.random() - 0.5) * 0.05; // micro-rotazione
         this.tiles.set(cellKey(x, y), mesh);
         this.group.add(mesh);
       }
