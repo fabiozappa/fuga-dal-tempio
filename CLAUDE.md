@@ -49,7 +49,8 @@ Pilastri: **memoria visiva**, **inseguimento in tempo reale**, **risk vs. reward
 │   │   ├── scene.js
 │   │   ├── camera.js
 │   │   ├── tiles.js
-│   │   └── actors.js
+│   │   ├── actors.js
+│   │   └── textures.js → texture procedurali su canvas (pietra, terreno)
 │   ├── input/
 │   │   ├── keyboard.js
 │   │   └── touch.js
@@ -222,8 +223,12 @@ Non implementare nulla di questo senza che sia stato deciso esplicitamente.
   villain può sorpassarlo e proseguire lungo il percorso corretto — di fatto
   rivelandogli la strada da seguire. Valutare dopo la Fase 3 se è un problema o un
   meccanismo di recupero accettabile.
-- **Direzione artistica**: sci-fi/Tron, tempio in rovina, laboratorio, minimalista
-  neon. Fino alla Fase 5 restano capsule e cubi low-poly.
+- ~~**Direzione artistica**~~: scelta — **tempio Inca abbandonato nella giungla**.
+  Giocatore = esploratore/archeologo (cappello a tesa), villain = guardiano di
+  pietra con occhi luminosi. Resa procedurale (geometrie + texture su canvas in
+  `render/textures.js`, nessun asset esterno): pietra muschiata, percorso in giada,
+  ambra/oro per rami e power-up, nebbia e luce di giungla. Primo passo fatto,
+  in rifinitura.
 - ~~**Difficoltà progressiva**~~: implementata in Fase 6 (`config.difficulty`):
   il villain accelera e il vantaggio iniziale cala per livello, fino a un limite.
 - **Preview dinamica**: durata fissa o crescente con H.

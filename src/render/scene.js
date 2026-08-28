@@ -5,8 +5,10 @@ import * as THREE from 'three';
 import { createCamera, fitCameraToBoard } from './camera.js';
 import { TileGrid } from './tiles.js';
 import { Actors } from './actors.js';
+import { makeGroundTexture } from './textures.js';
 
-const BG_COLOR = 0x0a0a12;
+const BG_COLOR = 0x121c12;   // verde giungla profondo
+const FOG_COLOR = 0x18261a;  // nebbia verde-terrosa
 const SPACING = 1; // distanza tra i centri delle tile, in unità di mondo
 
 export class GameRenderer {
@@ -15,6 +17,10 @@ export class GameRenderer {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(BG_COLOR);
+    // Nebbia: la camera ortografica è a ~100 unità, quindi il range è attorno a
+    // quella distanza. Lascia la plancia leggibile e sfuma il terreno lontano
+    // nella giungla.
+    this.scene.fog = new THREE.Fog(FOG_COLOR, 92, 165);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -22,12 +28,27 @@ export class GameRenderer {
 
     this.camera = createCamera();
 
-    // Luci: ambiente morbido + direzionale per dare volume alle capsule.
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
-    dir.position.set(5, 10, 7);
-    this.scene.add(dir);
-    this.scene.add(new THREE.HemisphereLight(0x88aaff, 0x101018, 0.4));
+    // Illuminazione da giungla: sole caldo tra le fronde + rimbalzo verde.
+    this.scene.add(new THREE.AmbientLight(0xdfe6c8, 0.5));
+    const sun = new THREE.DirectionalLight(0xfff0d0, 1.25);
+    sun.position.set(6, 12, 4);
+    this.scene.add(sun);
+    // Controluce freddo per staccare le sagome dallo sfondo.
+    const rim = new THREE.DirectionalLight(0x6fa0b0, 0.35);
+    rim.position.set(-6, 4, -6);
+    this.scene.add(rim);
+    // Cielo verdastro (canopia), terra terrosa.
+    this.scene.add(new THREE.HemisphereLight(0x3e5a2e, 0x241a10, 0.5));
+
+    // Terreno della giungla sotto e attorno alla plancia.
+    const groundTex = makeGroundTexture();
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(120, 120),
+      new THREE.MeshStandardMaterial({ map: groundTex, color: 0x2a3a20, roughness: 1 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.35; // appena sotto la base delle tile
+    this.scene.add(ground);
 
     this.tiles = new TileGrid(SPACING);
     this.actors = new Actors();
