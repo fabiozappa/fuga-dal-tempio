@@ -230,10 +230,14 @@ Non implementare nulla di questo senza che sia stato deciso esplicitamente.
   pietra con occhi luminosi (procedurali). **Fondale**: immagine dipinta a schermo
   intero del cortile del tempio con statue Inca attorno (`assets/images/
   backgroundinca.png`, caricata a runtime, adattamento "cover"). Le **caselle**
-  sono tile di **vetro smerigliato** (MeshPhysicalMaterial, transmission) che si
-  posano sul cortile e si illuminano come rune (giada = percorso, ambra = ramo,
-  oro = power-up). `render/rocks.js` e le texture di terra/roccia non sono più
-  usati dal fondale dipinto (restano disponibili). In rifinitura.
+  sono tile di **vetro smerigliato** (MeshPhysicalMaterial, transmission) con
+  angoli stondati e dimensione irregolare (85–100% della cella) che si posano sul
+  cortile e si illuminano come rune (giada = percorso, ambra = ramo, oro =
+  power-up). Appena una casella è **percorsa**, il vetro diventa **lastra di
+  pietra Inca** (`assets/images/incastone.png`, muratura poligonale seamless, UV
+  variati per tile): il percorso si costruisce in pietra sotto i passi.
+  `render/rocks.js` e le texture di terra/roccia non sono più usati (restano
+  disponibili). In rifinitura.
 - ~~**Difficoltà progressiva**~~: implementata in Fase 6 (`config.difficulty`):
   il villain accelera e il vantaggio iniziale cala per livello, fino a un limite.
 - **Preview dinamica**: durata fissa o crescente con H.

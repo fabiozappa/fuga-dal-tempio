@@ -54,6 +54,13 @@ function makeTileGeometry(w, h) {
   geo.rotateX(-Math.PI / 2);
   geo.computeBoundingBox();
   geo.translate(0, -geo.boundingBox.max.y, 0); // faccia superiore a y=0
+
+  // Offset UV casuale: ogni tile di pietra mostra una porzione diversa della
+  // texture (seamless), evitando la ripetizione identica tra le caselle.
+  const uv = geo.attributes.uv;
+  const ox = Math.random() * 4, oy = Math.random() * 4;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) + ox, uv.getY(i) + oy);
+  uv.needsUpdate = true;
   return geo;
 }
 
@@ -69,6 +76,17 @@ export class TileGrid {
     // Caselle di vetro smerigliato: si posano sul cortile dipinto (che traspare
     // sfocato) e si illuminano come rune del tempio.
     this.glassColor = new THREE.Color(0xcfe0dd);
+
+    // Pietra Inca: le caselle già percorse diventano una lastra di pietra vera.
+    this.stoneTex = new THREE.TextureLoader().load('./assets/images/incastone.png');
+    this.stoneTex.colorSpace = THREE.SRGBColorSpace;
+    this.stoneTex.wrapS = this.stoneTex.wrapT = THREE.RepeatWrapping;
+    this.stoneTex.repeat.set(0.6, 0.6); // scala del pattern per tile
+    this.stoneMat = new THREE.MeshStandardMaterial({
+      map: this.stoneTex, bumpMap: this.stoneTex, bumpScale: 0.03,
+      color: 0xd8d0bd, roughness: 0.95, metalness: 0.02,
+      emissive: 0x3a2a12, emissiveIntensity: 0.3, // tinta calda da torcia
+    });
     this.gemGeo = new THREE.OctahedronGeometry(0.2 * spacing);
     this.gemMat = new THREE.MeshStandardMaterial({
       color: GEM_COLOR, emissive: GEM_COLOR, emissiveIntensity: 0.7,
@@ -89,10 +107,11 @@ export class TileGrid {
 
   // (Ri)costruisce la griglia per le dimensioni date. Chiamata quando cambia H.
   build(width, height, powerUps) {
-    // Pulisce la griglia precedente (geometria per-tile: va liberata).
+    // Pulisce la griglia precedente (geometria e vetro per-tile vanno liberati;
+    // il materiale pietra è condiviso e resta).
     for (const mesh of this.tiles.values()) {
       mesh.geometry.dispose();
-      mesh.material.dispose();
+      if (mesh.userData.glassMat) mesh.userData.glassMat.dispose();
       this.group.remove(mesh);
     }
     this.tiles.clear();
@@ -115,6 +134,7 @@ export class TileGrid {
         const w = this.spacing * (0.85 + Math.random() * 0.15);
         const d = this.spacing * (0.85 + Math.random() * 0.15);
         const mesh = new THREE.Mesh(makeTileGeometry(w, d), mat);
+        mesh.userData.glassMat = mat; // materiale vetro (finché non è percorsa)
         const p = this.worldPos(x, y);
         mesh.position.set(p.x, -0.05, p.z); // faccia superiore a y=0
         mesh.rotation.y = (Math.random() - 0.5) * 0.05; // micro-rotazione
@@ -143,28 +163,33 @@ export class TileGrid {
     const pulse = 0.7 + 0.3 * Math.sin(now * 0.006);
 
     for (const [key, mesh] of this.tiles) {
-      const unlocked = snap.unlocked.has(key);
+      // Casella già percorsa: diventa (e resta) lastra di pietra Inca.
+      if (snap.unlocked.has(key)) {
+        if (mesh.material !== this.stoneMat) mesh.material = this.stoneMat;
+        continue;
+      }
+
+      // Non ancora percorsa: vetro smerigliato, che si illumina se rivelata.
+      const glass = mesh.userData.glassMat;
+      if (mesh.material !== glass) mesh.material = glass;
+
       const isPath = snap.pathKeys.has(key);
       const isBranch = snap.branchKeys.has(key);
       const pu = puByKey.get(key);
 
       let color = COLORS.off;
-      let active = false;
-      let revealed = false; // colorata dal "reveal" (pulsa), non da sblocco/errore
-      if (snap.reveal && isPath && !unlocked) { color = COLORS.path; active = true; revealed = true; }
-      if (snap.reveal && isBranch && !unlocked) { color = COLORS.branch; active = true; revealed = true; }
-      if (snap.reveal && pu && !pu.collected) { color = COLORS.power; active = true; revealed = true; }
-      if (unlocked) { color = pu && pu.collected ? COLORS.collected : COLORS.unlocked; active = true; revealed = false; }
+      let revealed = false; // colorata dal "reveal" (pulsa)
+      if (snap.reveal && isPath) { color = COLORS.path; revealed = true; }
+      if (snap.reveal && isBranch) { color = COLORS.branch; revealed = true; }
+      if (snap.reveal && pu && !pu.collected) { color = COLORS.power; revealed = true; }
       const isError = errorFlash && errorFlash.key === key && now < errorFlash.until;
-      if (isError) { color = COLORS.error; active = true; revealed = false; }
+      if (isError) { color = COLORS.error; revealed = false; }
 
-      // Il colore base del vetro resta costante; è l'emissione a "illuminare"
-      // la casella secondo lo stato.
-      mesh.material.emissive.setHex(color);
-      let intensity = active ? 0.5 : 0.0; // sblocco: bagliore torcia costante
-      if (revealed) intensity = 0.9 * pulse; // rivelato: pulsa più marcato
-      if (isError) intensity = 1.1; // lampeggio errore ben acceso
-      mesh.material.emissiveIntensity = intensity;
+      glass.emissive.setHex(color);
+      let intensity = 0;
+      if (revealed) intensity = 0.9 * pulse; // rivelato: pulsa
+      if (isError) intensity = 1.1; // lampeggio errore
+      glass.emissiveIntensity = intensity;
     }
 
     // Gemme visibili solo quando il percorso è rivelato e non ancora raccolte.
