@@ -3,24 +3,24 @@
 
 import * as THREE from 'three';
 import { cellKey } from '../core/grid.js';
-import { makeStoneTexture } from './textures.js';
+import { makeEarthTexture } from './textures.js';
 
-// Tinte per stato della casella (tempio Inca). Il colore moltiplica la texture
-// di pietra; l'emissione dà il "bagliore" alle caselle rivelate.
-//  off       → pietra muschiata al buio (corridoio spento)
-//  unlocked  → pietra illuminata dalla torcia (già percorsa)
-//  path      → giada/turchese inciso (percorso corretto rivelato)
+// Tinte per stato della casella. Il colore moltiplica la texture di terra;
+// l'emissione dà il "bagliore" alle caselle rivelate.
+//  off       → terra in ombra (sentiero spento)
+//  unlocked  → terra illuminata dalla torcia (già percorsa)
+//  path      → giada/turchese (percorso corretto rivelato)
 //  branch    → ambra (deviazione verso un power-up)
 //  power     → oro (casella col power-up)
-//  collected → pietra spenta (power-up già preso)
+//  collected → terra spenta (power-up già preso)
 //  error     → cinabro (casella sbagliata)
 const COLORS = {
-  off:       0x3c453a,
-  unlocked:  0xbb9a63,
+  off:       0x5a4a30,
+  unlocked:  0xb08a52,
   path:      0x2ec4b6,
   branch:    0xd08a34,
   power:     0xf2c744,
-  collected: 0x5a5442,
+  collected: 0x6b573a,
   error:     0xc0392b,
 };
 const GEM_COLOR = 0xf5c542;
@@ -34,9 +34,9 @@ export class TileGrid {
     this.tiles = new Map();   // key → mesh
     this.gems = [];           // { mesh, x, y }
 
-    this.stoneTex = makeStoneTexture();
-    // Blocchi di pietra massicci, con fuga (malta) profonda tra l'uno e l'altro.
-    this.tileGeo = new THREE.BoxGeometry(0.82 * spacing, 0.55, 0.82 * spacing);
+    this.earthTex = makeEarthTexture();
+    // Lastre basse di terra battuta: il sentiero, non blocchi di pietra.
+    this.tileGeo = new THREE.BoxGeometry(0.96 * spacing, 0.14, 0.96 * spacing);
     this.gemGeo = new THREE.OctahedronGeometry(0.2 * spacing);
     this.gemMat = new THREE.MeshStandardMaterial({
       color: GEM_COLOR, emissive: GEM_COLOR, emissiveIntensity: 0.7,
@@ -73,13 +73,14 @@ export class TileGrid {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const mat = new THREE.MeshStandardMaterial({
-          map: this.stoneTex, bumpMap: this.stoneTex, bumpScale: 0.08,
+          map: this.earthTex, bumpMap: this.earthTex, bumpScale: 0.05,
           color: COLORS.off, emissive: COLORS.off, emissiveIntensity: 0,
-          roughness: 0.95, metalness: 0.04,
+          roughness: 1, metalness: 0,
         });
         const mesh = new THREE.Mesh(this.tileGeo, mat);
+        mesh.receiveShadow = true;
         const p = this.worldPos(x, y);
-        mesh.position.set(p.x, -0.275, p.z); // faccia superiore a y=0
+        mesh.position.set(p.x, -0.07, p.z); // faccia superiore a y=0
         this.tiles.set(cellKey(x, y), mesh);
         this.group.add(mesh);
       }

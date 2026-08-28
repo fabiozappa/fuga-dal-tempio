@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { createCamera, fitCameraToBoard } from './camera.js';
 import { TileGrid } from './tiles.js';
 import { Actors } from './actors.js';
+import { buildRocks } from './rocks.js';
 import { makeGroundTexture } from './textures.js';
 
 const BG_COLOR = 0x121c12;   // verde giungla profondo
@@ -24,6 +25,9 @@ export class GameRenderer {
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Ombre morbide: danno peso e realismo a rocce e personaggi.
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
 
     this.camera = createCamera();
@@ -32,6 +36,14 @@ export class GameRenderer {
     this.scene.add(new THREE.AmbientLight(0xdfe6c8, 0.5));
     const sun = new THREE.DirectionalLight(0xfff0d0, 1.25);
     sun.position.set(6, 12, 4);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 60;
+    const s = 16; // il frustum d'ombra copre l'intera plancia più i bordi
+    sun.shadow.camera.left = -s; sun.shadow.camera.right = s;
+    sun.shadow.camera.top = s; sun.shadow.camera.bottom = -s;
+    sun.shadow.bias = -0.0005;
     this.scene.add(sun);
     // Controluce freddo per staccare le sagome dallo sfondo.
     const rim = new THREE.DirectionalLight(0x6fa0b0, 0.35);
@@ -47,12 +59,14 @@ export class GameRenderer {
       new THREE.MeshStandardMaterial({ map: groundTex, color: 0x2a3a20, roughness: 1 })
     );
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.35; // appena sotto la base delle tile
+    ground.position.y = -0.14; // appena sotto la superficie del sentiero
+    ground.receiveShadow = true;
     this.scene.add(ground);
 
     this.tiles = new TileGrid(SPACING);
     this.actors = new Actors();
-    this.scene.add(this.tiles.group, this.actors.group);
+    this.rocks = new THREE.Group(); // rocce sparse attorno (per livello)
+    this.scene.add(this.tiles.group, this.actors.group, this.rocks);
 
     this.dimKey = ''; // dimensioni per cui la griglia è costruita
     this.resize();
@@ -61,6 +75,16 @@ export class GameRenderer {
   // (Ri)costruisce la griglia quando cambiano le dimensioni della plancia.
   setDimensions(width, height, powerUps) {
     this.tiles.build(width, height, powerUps);
+
+    // Rigenera le rocce attorno al nuovo sentiero.
+    for (const r of [...this.rocks.children]) {
+      this.rocks.remove(r);
+      r.geometry.dispose();
+      r.material.dispose();
+    }
+    const field = buildRocks(width, height, SPACING);
+    while (field.children.length) this.rocks.add(field.children[0]);
+
     this.dimKey = width + 'x' + height;
     this.actors.reset(); // niente scivolata degli attori al cambio livello
     this.refitCamera();

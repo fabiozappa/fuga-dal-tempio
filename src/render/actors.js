@@ -99,6 +99,9 @@ export class Actors {
     this.villainEyeMats = villain.eyeMats;
 
     this.group.add(this.player, this.villain);
+    for (const root of [this.player, this.villain]) {
+      root.traverse((m) => { if (m.isMesh) m.castShadow = true; });
+    }
     this.snapNext = true; // al primo frame posiziona di scatto (niente scivolata)
   }
 

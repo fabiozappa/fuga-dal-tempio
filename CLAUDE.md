@@ -50,7 +50,8 @@ Pilastri: **memoria visiva**, **inseguimento in tempo reale**, **risk vs. reward
 │   │   ├── camera.js
 │   │   ├── tiles.js
 │   │   ├── actors.js
-│   │   └── textures.js → texture procedurali su canvas (pietra, terreno)
+│   │   ├── rocks.js    → massi irregolari procedurali sparsi attorno al sentiero
+│   │   └── textures.js → texture procedurali su canvas (terra, roccia, terreno)
 │   ├── input/
 │   │   ├── keyboard.js
 │   │   └── touch.js
@@ -225,10 +226,11 @@ Non implementare nulla di questo senza che sia stato deciso esplicitamente.
   meccanismo di recupero accettabile.
 - ~~**Direzione artistica**~~: scelta — **tempio Inca abbandonato nella giungla**.
   Giocatore = esploratore/archeologo (cappello a tesa), villain = guardiano di
-  pietra con occhi luminosi. Resa procedurale (geometrie + texture su canvas in
-  `render/textures.js`, nessun asset esterno): pietra muschiata, percorso in giada,
-  ambra/oro per rami e power-up, nebbia e luce di giungla. Primo passo fatto,
-  in rifinitura.
+  pietra con occhi luminosi. Resa procedurale (geometrie + texture su canvas,
+  nessun asset esterno). Il giocatore cammina su un **sentiero di terra** (tile
+  basse texturizzate); le **rocce** sono massi irregolari sparsi ATTORNO al
+  sentiero (`render/rocks.js`), non le caselle stesse. Ombre reali (shadow map),
+  nebbia e luce di giungla. In rifinitura.
 - ~~**Difficoltà progressiva**~~: implementata in Fase 6 (`config.difficulty`):
   il villain accelera e il vantaggio iniziale cala per livello, fino a un limite.
 - **Preview dinamica**: durata fissa o crescente con H.
