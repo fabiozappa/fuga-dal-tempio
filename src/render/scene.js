@@ -60,7 +60,13 @@ export class GameRenderer {
     this.scene.add(this.tiles.group, this.actors.group);
 
     this.dimKey = ''; // dimensioni per cui la griglia è costruita
+    this.shakeMag = 0; // ampiezza corrente della scossa, in pixel
     this.resize();
+  }
+
+  // Innesca una scossa (tutta l'immagine trema, al passo del guardiano).
+  shake(pixels = 5) {
+    this.shakeMag = Math.max(this.shakeMag, pixels);
   }
 
   // Adatta il fondale al viewport in modalità "cover" (riempi, ritaglia i bordi).
@@ -107,6 +113,19 @@ export class GameRenderer {
     this.tiles.update(snap, now, errorFlash);
     this.actors.update(snap, this.tiles, dtMs);
     this.renderer.render(this.scene, this.camera);
+
+    // Scossa: trasla l'intera immagine (canvas) di qualche pixel, e decade.
+    const el = this.renderer.domElement;
+    if (this.shakeMag > 0.15) {
+      const m = this.shakeMag;
+      const dx = (Math.random() - 0.5) * 2 * m;
+      const dy = (Math.random() - 0.5) * 2 * m;
+      el.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
+      this.shakeMag *= Math.exp(-dtMs / 55);
+    } else if (this.shakeMag !== 0) {
+      el.style.transform = '';
+      this.shakeMag = 0;
+    }
   }
 
   resize() {

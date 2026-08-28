@@ -26,6 +26,7 @@ game.startGame(); // prepara una scena (percorso mostrato dietro il titolo)
 
 // Handle di debug: comodo per ispezionare o pilotare lo stato dalla console.
 window.game = game;
+window.renderer = renderer;
 
 // Stato dell'interfaccia: 'title' | 'playing' | 'over'. La logica di gioco
 // avanza solo in 'playing'; le schermate sono overlay DOM.
@@ -34,6 +35,11 @@ let uiState = 'title';
 const $ = (id) => document.getElementById(id);
 let banner = { text: '', until: 0 };
 let errorFlash = { key: null, until: 0 };
+
+// Scossa+vibrazione al passo del guardiano: attiva di default, si commuta con V,
+// e parte solo dopo il primo passo dell'esploratore.
+let quakeEnabled = true;
+let playerMoved = false;
 
 // Record persistente (livello massimo raggiunto) in localStorage.
 const BEST_KEY = 'fuga_best';
@@ -64,6 +70,7 @@ function beginGame() {
   game.startGame();
   banner = { text: '', until: 0 };
   input.heldDir = null;
+  playerMoved = false;
   uiState = 'playing';
   $('title').classList.add('hidden');
   $('gameover').classList.add('hidden');
@@ -71,6 +78,13 @@ function beginGame() {
 
 createKeyboard({ input, onPress: step, onRestart: beginGame });
 createTouchDpad({ input, onPress: step, onRestart: beginGame });
+
+// Tasto V: accende/spegne scossa e vibrazione al passo del guardiano.
+window.addEventListener('keydown', (ev) => {
+  if (ev.code !== 'KeyV') return;
+  quakeEnabled = !quakeEnabled;
+  banner = { text: 'Scossa ' + (quakeEnabled ? 'ON' : 'OFF'), until: performance.now() + 1200 };
+});
 
 // Pulsanti delle schermate.
 $('playBtn').addEventListener('click', beginGame);
@@ -94,8 +108,18 @@ window.addEventListener('orientationchange', onResize);
 function handleEvents(now) {
   for (const e of game.drainEvents()) {
     switch (e.type) {
+      case 'phase':
+        if (e.phase === PHASES.PREVIEW) playerMoved = false; // scossa "riparte" a nuovo livello
+        break;
       case 'step':
         sound.step();
+        playerMoved = true; // da qui in poi il guardiano fa tremare il pavimento
+        break;
+      case 'villainStep':
+        if (quakeEnabled && playerMoved) {
+          renderer.shake(5); // pixel: scossa leggera
+          vibrate(18);
+        }
         break;
       case 'wrongStep':
         errorFlash = { key: cellKey(e.cell.x, e.cell.y), until: now + 350 };

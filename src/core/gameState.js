@@ -162,6 +162,7 @@ export class GameState {
         return;
       }
       this.villain.step(stepMs);
+      this.emit('villainStep', { cell: { ...this.villain.cell } }); // passo pesante
       // Cattura: villain sulla stessa casella del giocatore.
       if (sameCell(this.villain.cell, this.player)) {
         this.handleCapture();
