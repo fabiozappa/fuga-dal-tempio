@@ -60,31 +60,54 @@ function makeExplorer() {
 }
 
 // --- Guardiano di pietra ---------------------------------------------------
+// Idolo Inca scolpito: pietra sfaccettata, copricapo con oro, collana ed emblema
+// dorati, occhi luminosi. Rivolto verso la camera (lato -Z). Feet a y=0.
 function makeGuardian() {
   const g = new THREE.Group();
-  const bodyMats = [];
-  const push = (mesh) => { bodyMats.push(mesh.material); return mesh; };
 
-  g.add(push(at(box(0.17, 0.30, 0.18, STONE), -0.12, 0.15, 0)));  // gambe
-  g.add(push(at(box(0.17, 0.30, 0.18, STONE), 0.12, 0.15, 0)));
-  g.add(push(at(box(0.46, 0.44, 0.30, STONE), 0, 0.52, 0)));      // busto
-  g.add(push(at(box(0.15, 0.42, 0.17, STONE), -0.33, 0.52, 0)));  // braccia
-  g.add(push(at(box(0.15, 0.42, 0.17, STONE), 0.33, 0.52, 0)));
-  g.add(push(at(box(0.30, 0.26, 0.26, STONE), 0, 0.87, 0)));      // testa
+  // Materiali condivisi (uno per famiglia): efficienti e facili da tinteggiare.
+  const stone = new THREE.MeshStandardMaterial({ color: STONE, roughness: 1, metalness: 0.02, flatShading: true });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x33302a, roughness: 1, flatShading: true });
+  const gold = new THREE.MeshStandardMaterial({ color: 0xd4a94a, emissive: 0x4a3410, emissiveIntensity: 0.4, roughness: 0.4, metalness: 0.7 });
+  const eyeMat = new THREE.MeshStandardMaterial({ color: EYE_COLOR, emissive: EYE_COLOR, emissiveIntensity: 1 });
 
-  // Occhi luminosi sul fronte (lato -Z, verso la camera).
-  const eyeMats = [];
-  for (const ex of [-0.07, 0.07]) {
-    const eye = new THREE.Mesh(
-      new THREE.BoxGeometry(0.06, 0.05, 0.03),
-      new THREE.MeshStandardMaterial({ color: EYE_COLOR, emissive: EYE_COLOR, emissiveIntensity: 1 })
-    );
-    at(eye, ex, 0.89, -0.14);
-    eyeMats.push(eye.material);
-    g.add(eye);
-  }
+  const add = (mat, w, h, d, x, y, z, ry = 0) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z);
+    if (ry) m.rotation.y = ry;
+    g.add(m);
+    return m;
+  };
 
-  return { group: g, bodyMats, eyeMats };
+  add(stone, 0.16, 0.32, 0.18, -0.12, 0.16, 0);   // gambe
+  add(stone, 0.16, 0.32, 0.18, 0.12, 0.16, 0);
+  add(stone, 0.50, 0.44, 0.30, 0, 0.54, 0);       // busto
+  add(stone, 0.16, 0.44, 0.18, -0.35, 0.50, 0);   // braccia
+  add(stone, 0.16, 0.44, 0.18, 0.35, 0.50, 0);
+  add(stone, 0.22, 0.12, 0.28, -0.35, 0.75, 0);   // spalliere
+  add(stone, 0.22, 0.12, 0.28, 0.35, 0.75, 0);
+
+  add(gold, 0.38, 0.05, 0.06, 0, 0.72, -0.15);    // collana
+  add(gold, 0.14, 0.14, 0.06, 0, 0.56, -0.16);    // emblema sul petto
+
+  add(stone, 0.16, 0.09, 0.16, 0, 0.79, 0);       // collo
+  add(stone, 0.34, 0.30, 0.28, 0, 0.98, 0);       // testa
+  add(stone, 0.34, 0.06, 0.06, 0, 1.03, -0.12);   // arcata sopraccigliare
+  add(dark, 0.18, 0.05, 0.05, 0, 0.89, -0.14);    // bocca incisa
+
+  const eyes = [
+    add(eyeMat, 0.07, 0.06, 0.04, -0.08, 0.99, -0.15),
+    add(eyeMat, 0.07, 0.06, 0.04, 0.08, 0.99, -0.15),
+  ];
+
+  // Copricapo Inca: banda dorata, corona di pietra, cresta e ali laterali dorate.
+  add(gold, 0.42, 0.06, 0.32, 0, 1.16, 0);
+  add(stone, 0.44, 0.16, 0.30, 0, 1.26, 0);
+  add(gold, 0.48, 0.05, 0.30, 0, 1.36, 0);
+  add(gold, 0.10, 0.22, 0.28, -0.28, 1.27, 0, 0.35);
+  add(gold, 0.10, 0.22, 0.28, 0.28, 1.27, 0, -0.35);
+
+  return { group: g, bodyMats: [stone], eyeMats: [eyeMat] };
 }
 
 export class Actors {
