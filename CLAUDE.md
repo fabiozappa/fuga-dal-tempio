@@ -13,10 +13,11 @@ Pilastri: **memoria visiva**, **inseguimento in tempo reale**, **risk vs. reward
 
 - Vanilla JavaScript, ES modules nativi. **Nessun build step**, nessun bundler,
   nessun `npm run`. Si apre `index.html` da server locale e funziona.
-- Unica dipendenza esterna: **Three.js**, vendorizzata in locale
-  (`assets/vendor/three.module.js`) e risolta via `importmap`. Nessuna rete a
-  runtime: funziona anche offline. (Scelta presa perché il CDN `unpkg.com` non è
-  raggiungibile da alcuni ambienti di test.)
+- **Three.js** resta vendorizzata in locale (`assets/vendor/three.module.js`) e
+  risolta via `importmap`. Il vincolo "funziona offline" è stato **rimosso**: gli
+  asset (es. immagini di sfondo) possono essere **file locali caricati a runtime**,
+  serviti dallo stesso dominio. Preferire comunque asset **locali** ai CDN esterni:
+  alcuni ambienti dell'utente non raggiungono i CDN (es. `unpkg.com`).
 - Nessun framework, nessuna libreria di utility, nessun TypeScript.
 - **`src/core/` non importa mai Three.js.** La logica di gioco deve poter girare
   senza alcun renderer. Se una funzione in `core/` ha bisogno di sapere qualcosa
