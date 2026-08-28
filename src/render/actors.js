@@ -1,6 +1,6 @@
-// Attori — Three.js. Modelli low-poly compositi (nessun asset esterno):
-//  - giocatore: un esploratore/archeologo (cappello a tesa, zaino);
-//  - villain:   un guardiano di pietra del tempio, con occhi luminosi.
+// Attori — Three.js.
+//  - giocatore: modello low-poly composito (esploratore/archeologo);
+//  - villain:   sprite billboard da immagine dipinta scontornata (guardiano Inca).
 // Le posizioni sono interpolate morbidamente tra una casella e l'altra.
 
 import * as THREE from 'three';
@@ -10,11 +10,6 @@ import { SCREEN_RIGHT } from './camera.js';
 const TWEEN_TAU = 55;
 const SEP = 0.18;      // sfasamento orizzontale per non sovrapporre le sagome
 const STAND_Y = 0;     // i piedi poggiano sulla faccia superiore delle tile (y=0)
-
-const EYE_COLOR = 0xffb020;        // occhi del guardiano
-const EYE_FROZEN = 0x8fe4ff;       // occhi/ghiaccio quando è congelato (Gelo)
-const STONE = 0x7c7a70;
-const STONE_FROZEN = 0x9fc4d6;
 
 function box(w, h, d, color, opts = {}) {
   const mat = new THREE.MeshStandardMaterial({
@@ -59,55 +54,22 @@ function makeExplorer() {
   return { group: g, bodyMats: [], eyeMats: [] };
 }
 
-// --- Guardiano di pietra ---------------------------------------------------
-// Idolo Inca scolpito: pietra sfaccettata, copricapo con oro, collana ed emblema
-// dorati, occhi luminosi. Rivolto verso la camera (lato -Z). Feet a y=0.
-function makeGuardian() {
-  const g = new THREE.Group();
+// --- Guardiano (sprite) ----------------------------------------------------
+// Immagine dipinta scontornata (PNG con alpha), resa come sprite billboard che
+// guarda sempre la camera, ancorato ai piedi sulla casella. Il Gelo lo tinge di
+// azzurro ghiaccio.
+const GUARDIAN_SPRITE = './assets/images/sprites/guardiano/guardian.png';
+const GUARDIAN_ASPECT = 826 / 1264; // proporzioni del PNG scontornato
+const GUARDIAN_HEIGHT = 1.5;        // altezza in unità di mondo (imponente, non enorme)
 
-  // Materiali condivisi (uno per famiglia): efficienti e facili da tinteggiare.
-  const stone = new THREE.MeshStandardMaterial({ color: STONE, roughness: 1, metalness: 0.02, flatShading: true });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x33302a, roughness: 1, flatShading: true });
-  const gold = new THREE.MeshStandardMaterial({ color: 0xd4a94a, emissive: 0x4a3410, emissiveIntensity: 0.4, roughness: 0.4, metalness: 0.7 });
-  const eyeMat = new THREE.MeshStandardMaterial({ color: EYE_COLOR, emissive: EYE_COLOR, emissiveIntensity: 1 });
-
-  const add = (mat, w, h, d, x, y, z, ry = 0) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-    m.position.set(x, y, z);
-    if (ry) m.rotation.y = ry;
-    g.add(m);
-    return m;
-  };
-
-  add(stone, 0.16, 0.32, 0.18, -0.12, 0.16, 0);   // gambe
-  add(stone, 0.16, 0.32, 0.18, 0.12, 0.16, 0);
-  add(stone, 0.50, 0.44, 0.30, 0, 0.54, 0);       // busto
-  add(stone, 0.16, 0.44, 0.18, -0.35, 0.50, 0);   // braccia
-  add(stone, 0.16, 0.44, 0.18, 0.35, 0.50, 0);
-  add(stone, 0.22, 0.12, 0.28, -0.35, 0.75, 0);   // spalliere
-  add(stone, 0.22, 0.12, 0.28, 0.35, 0.75, 0);
-
-  add(gold, 0.38, 0.05, 0.06, 0, 0.72, -0.15);    // collana
-  add(gold, 0.14, 0.14, 0.06, 0, 0.56, -0.16);    // emblema sul petto
-
-  add(stone, 0.16, 0.09, 0.16, 0, 0.79, 0);       // collo
-  add(stone, 0.34, 0.30, 0.28, 0, 0.98, 0);       // testa
-  add(stone, 0.34, 0.06, 0.06, 0, 1.03, -0.12);   // arcata sopraccigliare
-  add(dark, 0.18, 0.05, 0.05, 0, 0.89, -0.14);    // bocca incisa
-
-  const eyes = [
-    add(eyeMat, 0.07, 0.06, 0.04, -0.08, 0.99, -0.15),
-    add(eyeMat, 0.07, 0.06, 0.04, 0.08, 0.99, -0.15),
-  ];
-
-  // Copricapo Inca: banda dorata, corona di pietra, cresta e ali laterali dorate.
-  add(gold, 0.42, 0.06, 0.32, 0, 1.16, 0);
-  add(stone, 0.44, 0.16, 0.30, 0, 1.26, 0);
-  add(gold, 0.48, 0.05, 0.30, 0, 1.36, 0);
-  add(gold, 0.10, 0.22, 0.28, -0.28, 1.27, 0, 0.35);
-  add(gold, 0.10, 0.22, 0.28, 0.28, 1.27, 0, -0.35);
-
-  return { group: g, bodyMats: [stone], eyeMats: [eyeMat] };
+function makeGuardianSprite() {
+  const tex = new THREE.TextureLoader().load(GUARDIAN_SPRITE);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.center.set(0.5, 0); // origine ai piedi
+  sprite.scale.set(GUARDIAN_HEIGHT * GUARDIAN_ASPECT, GUARDIAN_HEIGHT, 1);
+  return { sprite, mat };
 }
 
 export class Actors {
@@ -115,16 +77,13 @@ export class Actors {
     this.group = new THREE.Group();
 
     const player = makeExplorer();
-    const villain = makeGuardian();
+    const guardian = makeGuardianSprite();
     this.player = player.group;
-    this.villain = villain.group;
-    this.villainBodyMats = villain.bodyMats;
-    this.villainEyeMats = villain.eyeMats;
+    this.villain = guardian.sprite;
+    this.villainMat = guardian.mat;
 
     this.group.add(this.player, this.villain);
-    for (const root of [this.player, this.villain]) {
-      root.traverse((m) => { if (m.isMesh) m.castShadow = true; });
-    }
+    this.player.traverse((m) => { if (m.isMesh) m.castShadow = true; });
     this.snapNext = true; // al primo frame posiziona di scatto (niente scivolata)
   }
 
@@ -150,13 +109,9 @@ export class Actors {
     const v = tileGrid.worldPos(snap.villain.x, snap.villain.y);
     this.moveToward(this.villain, v.x - SCREEN_RIGHT.x * SEP, v.z - SCREEN_RIGHT.z * SEP, dtMs);
 
-    // Feedback del Gelo: la pietra del guardiano si vela di ghiaccio, gli occhi
-    // passano da ambra a azzurro.
+    // Feedback del Gelo: lo sprite del guardiano si vela di azzurro ghiaccio.
     const frozen = snap.timers.freezeMs > 0;
-    const stone = frozen ? STONE_FROZEN : STONE;
-    for (const m of this.villainBodyMats) m.color.setHex(stone);
-    const eye = frozen ? EYE_FROZEN : EYE_COLOR;
-    for (const m of this.villainEyeMats) { m.color.setHex(eye); m.emissive.setHex(eye); }
+    this.villainMat.color.setHex(frozen ? 0x9fd0e6 : 0xffffff);
 
     this.snapNext = false;
   }

@@ -226,8 +226,10 @@ Non implementare nulla di questo senza che sia stato deciso esplicitamente.
   rivelandogli la strada da seguire. Valutare dopo la Fase 3 se è un problema o un
   meccanismo di recupero accettabile.
 - ~~**Direzione artistica**~~: scelta — **tempio Inca abbandonato nella giungla**.
-  Giocatore = esploratore/archeologo (cappello a tesa), villain = guardiano di
-  pietra con occhi luminosi (procedurali). **Fondale**: immagine dipinta a schermo
+  Giocatore = esploratore/archeologo (cappello a tesa, modello 3D low-poly),
+  villain = **guardiano Inca** come sprite billboard da immagine dipinta
+  scontornata (`assets/images/sprites/guardiano/guardian.png`; sorgente
+  `guardiano.png` scontornata con rembg). **Fondale**: immagine dipinta a schermo
   intero del cortile del tempio con statue Inca attorno (`assets/images/
   backgroundinca.png`, caricata a runtime, adattamento "cover"). Le **caselle**
   sono tile di **vetro smerigliato** (MeshPhysicalMaterial, transmission) con
