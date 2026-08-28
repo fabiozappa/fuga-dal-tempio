@@ -79,12 +79,33 @@ function beginGame() {
 createKeyboard({ input, onPress: step, onRestart: beginGame });
 createTouchDpad({ input, onPress: step, onRestart: beginGame });
 
-// Tasto V: accende/spegne scossa e vibrazione al passo del guardiano.
-window.addEventListener('keydown', (ev) => {
-  if (ev.code !== 'KeyV') return;
+// Scossa/vibrazione: toggle da tasto V o dal pulsante dedicato.
+function updateQuakeBtn() {
+  const b = $('quake');
+  if (b) b.classList.toggle('off', !quakeEnabled);
+}
+function toggleQuake() {
   quakeEnabled = !quakeEnabled;
+  updateQuakeBtn();
   banner = { text: 'Scossa ' + (quakeEnabled ? 'ON' : 'OFF'), until: performance.now() + 1200 };
-});
+}
+window.addEventListener('keydown', (ev) => { if (ev.code === 'KeyV') toggleQuake(); });
+const quakeBtn = $('quake');
+if (quakeBtn) {
+  quakeBtn.addEventListener('pointerdown', (ev) => { ev.preventDefault(); toggleQuake(); });
+}
+
+// Lampo bianco a schermo intero (comparsa del guardiano).
+function flashScreen() {
+  const f = $('flash');
+  if (!f) return;
+  f.style.transition = 'none';
+  f.style.opacity = '0.55';
+  requestAnimationFrame(() => {
+    f.style.transition = 'opacity 380ms ease-out';
+    f.style.opacity = '0';
+  });
+}
 
 // Pulsanti delle schermate.
 $('playBtn').addEventListener('click', beginGame);
@@ -109,11 +130,21 @@ function handleEvents(now) {
   for (const e of game.drainEvents()) {
     switch (e.type) {
       case 'phase':
-        if (e.phase === PHASES.PREVIEW) playerMoved = false; // scossa "riparte" a nuovo livello
+        if (e.phase === PHASES.PREVIEW) {
+          // Nuovo livello: guardiano di nuovo nascosto, scossa "riarmata".
+          playerMoved = false;
+          renderer.hideGuardian();
+        }
         break;
       case 'step':
         sound.step();
-        playerMoved = true; // da qui in poi il guardiano fa tremare il pavimento
+        if (!playerMoved) {
+          // Primo passo dell'esploratore: il guardiano compare (fade + lampo).
+          playerMoved = true;
+          renderer.revealGuardian();
+          flashScreen();
+          if (quakeEnabled) { renderer.shake(7); vibrate(30); }
+        }
         break;
       case 'villainStep':
         if (quakeEnabled && playerMoved) {

@@ -90,8 +90,8 @@
     .db.up { grid-area: up; } .db.down { grid-area: dn; }
     .db.left { grid-area: lt; } .db.right { grid-area: rt; }
 
-    /* Restart e mute: angoli in basso, lontani dal D-Pad. */
-    #restart, #mute {
+    /* Restart, mute e scossa: angoli in basso, lontani dal D-Pad. */
+    #restart, #mute, #quake {
       position: fixed;
       bottom: max(env(safe-area-inset-bottom, 0), 4vh);
       width: 46px; height: 46px; font-size: 1.2rem;
@@ -101,6 +101,14 @@
     }
     #restart { right: .8rem; }
     #mute { left: .8rem; }
+    #quake { left: calc(.8rem + 56px); }
+    #quake.off { opacity: .4; }
+
+    /* Lampo bianco (comparsa del guardiano). */
+    #flash {
+      position: fixed; inset: 0; background: #fff; opacity: 0;
+      pointer-events: none; z-index: 20;
+    }
 
     /* Schermate di titolo e game over. */
     .screen {
@@ -142,6 +150,10 @@
   </div>
   <button id="restart" aria-label="ricomincia">↺</button>
   <button id="mute" aria-label="audio">🔊</button>
+  <button id="quake" aria-label="scossa e vibrazione">📳</button>
+
+  <!-- Lampo bianco alla comparsa del guardiano. -->
+  <div id="flash"></div>
 
   <!-- Schermata iniziale (Fase 6). -->
   <div id="title" class="screen">

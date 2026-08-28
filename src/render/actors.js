@@ -84,11 +84,30 @@ export class Actors {
 
     this.group.add(this.player, this.villain);
     this.player.traverse((m) => { if (m.isMesh) m.castShadow = true; });
+    this.villainBaseScale = this.villain.scale.clone();
     this.snapNext = true; // al primo frame posiziona di scatto (niente scivolata)
+    this.hideGuardian();  // nascosto finché l'esploratore non fa il primo passo
   }
 
   reset() {
     this.snapNext = true;
+    this.hideGuardian();
+  }
+
+  hideGuardian() {
+    this.guardianRevealing = false;
+    this.guardianRevealed = false;
+    this.revealT = 0;
+    this.villain.visible = false;
+    this.villainMat.opacity = 0;
+  }
+
+  // Comparsa del guardiano (fade + piccolo pop), al primo passo dell'esploratore.
+  revealGuardian() {
+    if (this.guardianRevealed || this.guardianRevealing) return;
+    this.guardianRevealing = true;
+    this.revealT = 0;
+    this.villain.visible = true;
   }
 
   moveToward(obj, tx, tz, dtMs) {
@@ -112,6 +131,22 @@ export class Actors {
     // Feedback del Gelo: lo sprite del guardiano si vela di azzurro ghiaccio.
     const frozen = snap.timers.freezeMs > 0;
     this.villainMat.color.setHex(frozen ? 0x9fd0e6 : 0xffffff);
+
+    // Animazione di comparsa: opacità 0→1 e leggero pop dall'alto (piedi fissi).
+    if (this.guardianRevealing) {
+      this.revealT += dtMs;
+      const p = Math.min(1, this.revealT / 280);
+      const eased = 1 - Math.pow(1 - p, 3);
+      this.villainMat.opacity = eased;
+      const pop = 1 + (1 - eased) * 0.15;
+      this.villain.scale.set(this.villainBaseScale.x * pop, this.villainBaseScale.y * pop, 1);
+      if (p >= 1) {
+        this.guardianRevealing = false;
+        this.guardianRevealed = true;
+        this.villainMat.opacity = 1;
+        this.villain.scale.copy(this.villainBaseScale);
+      }
+    }
 
     this.snapNext = false;
   }

@@ -69,6 +69,16 @@ export class GameRenderer {
     this.shakeMag = Math.max(this.shakeMag, pixels);
   }
 
+  // Fa comparire il guardiano (fade + pop).
+  revealGuardian() {
+    this.actors.revealGuardian();
+  }
+
+  // Rinasconde il guardiano (a inizio livello, prima del primo passo).
+  hideGuardian() {
+    this.actors.hideGuardian();
+  }
+
   // Adatta il fondale al viewport in modalità "cover" (riempi, ritaglia i bordi).
   updateBackgroundCover() {
     if (!this.bgTexture || !this.bgTexture.image) return;
