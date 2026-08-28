@@ -5,12 +5,11 @@ import * as THREE from 'three';
 import { createCamera, fitCameraToBoard } from './camera.js';
 import { TileGrid } from './tiles.js';
 import { Actors } from './actors.js';
-import { buildRocks } from './rocks.js';
-import { makeGroundTexture } from './textures.js';
 
-const BG_COLOR = 0x121c12;   // verde giungla profondo
-const FOG_COLOR = 0x18261a;  // nebbia verde-terrosa
-const SPACING = 1; // distanza tra i centri delle tile, in unità di mondo
+const BG_COLOR = 0x121c12;   // fallback finché non carica l'immagine di sfondo
+const BG_IMAGE = './assets/images/backgroundinca.png';
+const SPACING = 1;    // distanza tra i centri delle tile, in unità di mondo
+const CAM_PAD = 2.2;  // margine attorno alla plancia: lascia respirare il fondale
 
 export class GameRenderer {
   constructor(container) {
@@ -18,19 +17,23 @@ export class GameRenderer {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(BG_COLOR);
-    // Nebbia: la camera ortografica è a ~100 unità, quindi il range è attorno a
-    // quella distanza. Lascia la plancia leggibile e sfuma il terreno lontano
-    // nella giungla.
-    this.scene.fog = new THREE.Fog(FOG_COLOR, 92, 165);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    // Ombre morbide: danno peso e realismo a rocce e personaggi.
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
 
     this.camera = createCamera();
+
+    // Fondale dipinto (cortile del tempio con statue Inca attorno): riempie lo
+    // schermo con adattamento "cover" (niente distorsione, si tagliano i bordi).
+    this.bgTexture = null;
+    new THREE.TextureLoader().load(BG_IMAGE, (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+      this.bgTexture = tex;
+      this.scene.background = tex;
+      this.updateBackgroundCover();
+    });
 
     // Illuminazione da giungla: sole caldo tra le fronde + rimbalzo verde.
     this.scene.add(new THREE.AmbientLight(0xdfe6c8, 0.5));
@@ -52,39 +55,34 @@ export class GameRenderer {
     // Cielo verdastro (canopia), terra terrosa.
     this.scene.add(new THREE.HemisphereLight(0x3e5a2e, 0x241a10, 0.5));
 
-    // Terreno della giungla sotto e attorno alla plancia.
-    const groundTex = makeGroundTexture();
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(120, 120),
-      new THREE.MeshStandardMaterial({ map: groundTex, color: 0x2a3a20, roughness: 1 })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.14; // appena sotto la superficie del sentiero
-    ground.receiveShadow = true;
-    this.scene.add(ground);
-
     this.tiles = new TileGrid(SPACING);
     this.actors = new Actors();
-    this.rocks = new THREE.Group(); // rocce sparse attorno (per livello)
-    this.scene.add(this.tiles.group, this.actors.group, this.rocks);
+    this.scene.add(this.tiles.group, this.actors.group);
 
     this.dimKey = ''; // dimensioni per cui la griglia è costruita
     this.resize();
   }
 
+  // Adatta il fondale al viewport in modalità "cover" (riempi, ritaglia i bordi).
+  updateBackgroundCover() {
+    if (!this.bgTexture || !this.bgTexture.image) return;
+    const img = this.bgTexture.image;
+    const imgA = img.width / img.height;
+    const viewA = this.container.clientWidth / this.container.clientHeight;
+    const t = this.bgTexture;
+    if (viewA > imgA) {
+      t.repeat.set(1, imgA / viewA);
+      t.offset.set(0, (1 - imgA / viewA) / 2);
+    } else {
+      t.repeat.set(viewA / imgA, 1);
+      t.offset.set((1 - viewA / imgA) / 2, 0);
+    }
+    t.needsUpdate = true;
+  }
+
   // (Ri)costruisce la griglia quando cambiano le dimensioni della plancia.
   setDimensions(width, height, powerUps) {
     this.tiles.build(width, height, powerUps);
-
-    // Rigenera le rocce attorno al nuovo sentiero.
-    for (const r of [...this.rocks.children]) {
-      this.rocks.remove(r);
-      r.geometry.dispose();
-      r.material.dispose();
-    }
-    const field = buildRocks(width, height, SPACING);
-    while (field.children.length) this.rocks.add(field.children[0]);
-
     this.dimKey = width + 'x' + height;
     this.actors.reset(); // niente scivolata degli attori al cambio livello
     this.refitCamera();
@@ -95,7 +93,8 @@ export class GameRenderer {
     fitCameraToBoard(
       this.camera,
       { width: this.tiles.width, height: this.tiles.height, spacing: SPACING },
-      aspect
+      aspect,
+      CAM_PAD
     );
   }
 
@@ -114,6 +113,7 @@ export class GameRenderer {
     const w = this.container.clientWidth;
     const h = this.container.clientHeight;
     this.renderer.setSize(w, h);
+    this.updateBackgroundCover();
     if (this.tiles.width) this.refitCamera();
   }
 }

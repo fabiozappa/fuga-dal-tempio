@@ -3,7 +3,6 @@
 
 import * as THREE from 'three';
 import { cellKey } from '../core/grid.js';
-import { makeEarthTexture } from './textures.js';
 
 // Tinte per stato della casella. Il colore moltiplica la texture di terra;
 // l'emissione dà il "bagliore" alle caselle rivelate.
@@ -34,9 +33,10 @@ export class TileGrid {
     this.tiles = new Map();   // key → mesh
     this.gems = [];           // { mesh, x, y }
 
-    this.earthTex = makeEarthTexture();
-    // Lastre basse di terra battuta: il sentiero, non blocchi di pietra.
-    this.tileGeo = new THREE.BoxGeometry(0.96 * spacing, 0.14, 0.96 * spacing);
+    // Caselle di vetro smerigliato: si posano sul cortile dipinto (che traspare
+    // sfocato) e si illuminano come rune del tempio.
+    this.tileGeo = new THREE.BoxGeometry(0.9 * spacing, 0.1, 0.9 * spacing);
+    this.glassColor = new THREE.Color(0xcfe0dd);
     this.gemGeo = new THREE.OctahedronGeometry(0.2 * spacing);
     this.gemMat = new THREE.MeshStandardMaterial({
       color: GEM_COLOR, emissive: GEM_COLOR, emissiveIntensity: 0.7,
@@ -72,15 +72,15 @@ export class TileGrid {
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        const mat = new THREE.MeshStandardMaterial({
-          map: this.earthTex, bumpMap: this.earthTex, bumpScale: 0.05,
-          color: COLORS.off, emissive: COLORS.off, emissiveIntensity: 0,
-          roughness: 1, metalness: 0,
+        const mat = new THREE.MeshPhysicalMaterial({
+          color: this.glassColor, metalness: 0, roughness: 0.35,
+          transmission: 0.92, thickness: 0.5, ior: 1.3, transparent: true,
+          clearcoat: 0.5, clearcoatRoughness: 0.35,
+          emissive: 0x000000, emissiveIntensity: 0,
         });
         const mesh = new THREE.Mesh(this.tileGeo, mat);
-        mesh.receiveShadow = true;
         const p = this.worldPos(x, y);
-        mesh.position.set(p.x, -0.07, p.z); // faccia superiore a y=0
+        mesh.position.set(p.x, -0.05, p.z); // faccia superiore a y=0
         this.tiles.set(cellKey(x, y), mesh);
         this.group.add(mesh);
       }
@@ -121,11 +121,12 @@ export class TileGrid {
       const isError = errorFlash && errorFlash.key === key && now < errorFlash.until;
       if (isError) { color = COLORS.error; active = true; revealed = false; }
 
-      mesh.material.color.setHex(color);
+      // Il colore base del vetro resta costante; è l'emissione a "illuminare"
+      // la casella secondo lo stato.
       mesh.material.emissive.setHex(color);
-      let intensity = active ? 0.3 : 0.0; // sblocco: bagliore torcia costante
-      if (revealed) intensity = 0.55 * pulse; // rivelato: pulsa più marcato
-      if (isError) intensity = 0.95; // lampeggio errore ben acceso
+      let intensity = active ? 0.5 : 0.0; // sblocco: bagliore torcia costante
+      if (revealed) intensity = 0.9 * pulse; // rivelato: pulsa più marcato
+      if (isError) intensity = 1.1; // lampeggio errore ben acceso
       mesh.material.emissiveIntensity = intensity;
     }
 

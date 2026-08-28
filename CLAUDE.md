@@ -227,11 +227,13 @@ Non implementare nulla di questo senza che sia stato deciso esplicitamente.
   meccanismo di recupero accettabile.
 - ~~**Direzione artistica**~~: scelta — **tempio Inca abbandonato nella giungla**.
   Giocatore = esploratore/archeologo (cappello a tesa), villain = guardiano di
-  pietra con occhi luminosi. Resa procedurale (geometrie + texture su canvas,
-  nessun asset esterno). Il giocatore cammina su un **sentiero di terra** (tile
-  basse texturizzate); le **rocce** sono massi irregolari sparsi ATTORNO al
-  sentiero (`render/rocks.js`), non le caselle stesse. Ombre reali (shadow map),
-  nebbia e luce di giungla. In rifinitura.
+  pietra con occhi luminosi (procedurali). **Fondale**: immagine dipinta a schermo
+  intero del cortile del tempio con statue Inca attorno (`assets/images/
+  backgroundinca.png`, caricata a runtime, adattamento "cover"). Le **caselle**
+  sono tile di **vetro smerigliato** (MeshPhysicalMaterial, transmission) che si
+  posano sul cortile e si illuminano come rune (giada = percorso, ambra = ramo,
+  oro = power-up). `render/rocks.js` e le texture di terra/roccia non sono più
+  usati dal fondale dipinto (restano disponibili). In rifinitura.
 - ~~**Difficoltà progressiva**~~: implementata in Fase 6 (`config.difficulty`):
   il villain accelera e il vantaggio iniziale cala per livello, fino a un limite.
 - **Preview dinamica**: durata fissa o crescente con H.
