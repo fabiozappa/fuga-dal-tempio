@@ -114,6 +114,102 @@ export function makeGlowTexture(size = 128) {
   return new THREE.CanvasTexture(c);
 }
 
+function iconCanvas(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.translate(size / 2, size / 2); // origine al centro, y negativo = su
+  return { c, ctx };
+}
+function iconTexture(c) {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// Cuore rosso (power-up Vita Extra).
+export function makeHeartTexture(size = 128) {
+  const { c, ctx } = iconCanvas(size);
+  const w = size * 0.74, h = size * 0.66, top = -size * 0.22;
+  ctx.beginPath();
+  ctx.moveTo(0, top + h * 0.28);
+  ctx.bezierCurveTo(0, top, -w / 2, top, -w / 2, top + h * 0.32);
+  ctx.bezierCurveTo(-w / 2, top + h * 0.62, -w * 0.12, top + h * 0.85, 0, top + h);
+  ctx.bezierCurveTo(w * 0.12, top + h * 0.85, w / 2, top + h * 0.62, w / 2, top + h * 0.32);
+  ctx.bezierCurveTo(w / 2, top, 0, top, 0, top + h * 0.28);
+  ctx.closePath();
+  ctx.fillStyle = '#ff4d4d'; ctx.fill();
+  ctx.lineWidth = size * 0.05; ctx.strokeStyle = '#8e1616'; ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(-w * 0.16, top + h * 0.36, w * 0.1, h * 0.12, -0.5, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fill();
+  return iconTexture(c);
+}
+
+// Fiocco di neve bianco (power-up Gelo).
+export function makeSnowflakeTexture(size = 128) {
+  const { c, ctx } = iconCanvas(size);
+  const R = size * 0.42;
+  ctx.strokeStyle = '#eef7ff'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.lineWidth = size * 0.045;
+  for (let i = 0; i < 6; i++) {
+    ctx.save();
+    ctx.rotate((i * Math.PI) / 3);
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -R); ctx.stroke();
+    for (const f of [0.55, 0.82]) {
+      ctx.beginPath();
+      ctx.moveTo(0, -R * f); ctx.lineTo(-R * 0.24, -R * f - R * 0.2);
+      ctx.moveTo(0, -R * f); ctx.lineTo(R * 0.24, -R * f - R * 0.2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  ctx.fillStyle = '#eef7ff';
+  ctx.beginPath(); ctx.arc(0, 0, size * 0.055, 0, Math.PI * 2); ctx.fill();
+  return iconTexture(c);
+}
+
+// Maschera Inca gialla (power-up Rivelatore).
+export function makeMaskTexture(size = 128) {
+  const { c, ctx } = iconCanvas(size);
+  const gold = '#f2c744', dark = '#5a3d12';
+  ctx.lineWidth = size * 0.03; ctx.strokeStyle = dark;
+  const fw = size * 0.52, fh = size * 0.6, r = size * 0.1;
+
+  // Copricapo: banda a gradini in cima.
+  ctx.fillStyle = gold;
+  ctx.beginPath();
+  ctx.rect(-fw * 0.66, -fh / 2 - size * 0.17, fw * 1.32, size * 0.17);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = dark;
+  for (let k = -2; k <= 2; k++) ctx.fillRect(k * size * 0.13 - size * 0.02, -fh / 2 - size * 0.13, size * 0.04, size * 0.09);
+
+  // Volto (rettangolo stondato).
+  ctx.fillStyle = gold;
+  ctx.beginPath();
+  ctx.moveTo(-fw / 2 + r, -fh / 2);
+  ctx.lineTo(fw / 2 - r, -fh / 2);
+  ctx.quadraticCurveTo(fw / 2, -fh / 2, fw / 2, -fh / 2 + r);
+  ctx.lineTo(fw / 2, fh / 2 - r);
+  ctx.quadraticCurveTo(fw / 2, fh / 2, fw / 2 - r, fh / 2);
+  ctx.lineTo(-fw / 2 + r, fh / 2);
+  ctx.quadraticCurveTo(-fw / 2, fh / 2, -fw / 2, fh / 2 - r);
+  ctx.lineTo(-fw / 2, -fh / 2 + r);
+  ctx.quadraticCurveTo(-fw / 2, -fh / 2, -fw / 2 + r, -fh / 2);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  // Occhi, naso, bocca (scavati).
+  ctx.fillStyle = dark;
+  ctx.fillRect(-fw * 0.3, -fh * 0.16, fw * 0.2, fh * 0.11);
+  ctx.fillRect(fw * 0.1, -fh * 0.16, fw * 0.2, fh * 0.11);
+  ctx.beginPath();
+  ctx.moveTo(0, -fh * 0.04); ctx.lineTo(-fw * 0.09, fh * 0.2); ctx.lineTo(fw * 0.09, fh * 0.2);
+  ctx.closePath(); ctx.fill();
+  ctx.fillRect(-fw * 0.22, fh * 0.28, fw * 0.44, fh * 0.09);
+  return iconTexture(c);
+}
+
 // Terreno della giungla attorno: terriccio scuro con fogliame.
 export function makeGroundTexture(size = 256) {
   const c = document.createElement('canvas');
