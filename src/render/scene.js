@@ -59,7 +59,8 @@ export class GameRenderer {
     this.actors = new Actors();
     this.scene.add(this.tiles.group, this.actors.group);
 
-    this.dimKey = ''; // dimensioni per cui la griglia è costruita
+    this.dimKey = '';          // dimensioni per cui la griglia è costruita
+    this.builtLevelId = null;  // id del livello per cui è costruita la scena
     this.shakeMag = 0; // ampiezza corrente della scossa, in pixel
     this.resize();
   }
@@ -114,10 +115,11 @@ export class GameRenderer {
     );
   }
 
-  // Disegna lo snapshot. Ricostruisce la griglia se le dimensioni sono cambiate.
+  // Disegna lo snapshot. Ricostruisce ad ogni nuovo livello (anche a parità di
+  // dimensioni: percorso e power-up cambiano).
   sync(snap, now, dtMs, errorFlash) {
-    const dimKey = snap.width + 'x' + snap.height;
-    if (dimKey !== this.dimKey) {
+    if (snap.levelId !== this.builtLevelId) {
+      this.builtLevelId = snap.levelId;
       this.setDimensions(snap.width, snap.height, snap.powerUps);
     }
     this.tiles.update(snap, now, errorFlash);

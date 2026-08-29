@@ -172,7 +172,7 @@ export class TileGrid {
         blending: THREE.AdditiveBlending, depthWrite: false,
       }));
       glow.scale.set(0.9, 0.9, 1);
-      glow.position.set(p.x, 0.55, p.z);
+      glow.position.set(p.x, 0.42, p.z);
       glow.visible = false;
       glow.renderOrder = 1;
 
@@ -180,7 +180,7 @@ export class TileGrid {
         map: this.puIcon[pu.kind], transparent: true, depthWrite: false,
       }));
       icon.scale.set(0.5, 0.5, 1);
-      icon.position.set(p.x, 0.55, p.z);
+      icon.position.set(p.x, 0.42, p.z);
       icon.visible = false;
       icon.renderOrder = 2; // davanti all'alone
 
@@ -234,7 +234,7 @@ export class TileGrid {
       g.icon.visible = visible;
       g.glow.visible = visible;
       if (!visible) continue;
-      const bob = 0.55 + Math.sin(now * 0.004) * 0.08;
+      const bob = 0.42 + Math.sin(now * 0.004) * 0.08;
       g.icon.position.y = bob;
       g.glow.position.y = bob;
       const pulse = 0.85 + 0.15 * Math.sin(now * 0.006);

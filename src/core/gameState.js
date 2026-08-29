@@ -43,6 +43,11 @@ export class GameState {
 
   // Prepara un nuovo livello e va in PREVIEW.
   startLevel() {
+    // Id univoco di questa istanza di livello: cambia ad ogni generazione, anche
+    // a parità di dimensioni. La vista lo usa per ricostruire (percorso/power-up
+    // nuovi) invece di fidarsi solo delle dimensioni.
+    this.levelId = (this.levelId || 0) + 1;
+
     this.width = this.config.grid.width;
     this.height = this.config.grid.baseHeight + (this.level - 1);
 
@@ -317,6 +322,7 @@ export class GameState {
   getSnapshot() {
     return {
       level: this.level,
+      levelId: this.levelId,
       phase: this.phase,
       lives: this.lives,
       width: this.width,
