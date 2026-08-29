@@ -10,3 +10,6 @@
 # Log e file temporanei
 *.log
 node_modules/
+
+# Classifica a punti (dati scritti a runtime)
+assets/leaderboard.json

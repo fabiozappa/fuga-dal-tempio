@@ -28,10 +28,11 @@ export class GameState {
 
   // --- Avvio ---------------------------------------------------------------
 
-  // Nuova partita da zero: livello 1, vite ripristinate.
+  // Nuova partita da zero: livello 1, vite ripristinate, punteggio a zero.
   startGame() {
     this.level = 1;
     this.lives = this.config.lives.start;
+    this.score = 0; // +1 per casella scoperta, −1 per passo del villain
     this.startLevel();
   }
 
@@ -174,6 +175,7 @@ export class GameState {
         return;
       }
       this.villain.step(stepMs);
+      this.score -= 1; // −1 punto per ogni casella percorsa dal villain
       this.emit('villainStep', { cell: { ...this.villain.cell } }); // passo pesante
       // Cattura: villain sulla stessa casella del giocatore.
       if (sameCell(this.villain.cell, this.player)) {
@@ -222,9 +224,11 @@ export class GameState {
 
     if (this.walkableKeys.has(key)) {
       // Passo valido: percorso o ramo. Nessuna penalità.
+      const isNewCell = !this.unlocked.has(key); // scoperta = prima volta su questa casella
       this.player = { x: nx, y: ny };
       this.playerTrail.push({ x: nx, y: ny });
       this.unlocked.add(key);
+      if (isNewCell) this.score += 1; // +1 punto per casella scoperta
       this.lastError = null;
       this.emit('step', { cell: { x: nx, y: ny } });
 
@@ -325,6 +329,7 @@ export class GameState {
       levelId: this.levelId,
       phase: this.phase,
       lives: this.lives,
+      score: this.score,
       width: this.width,
       height: this.height,
       player: { ...this.player },

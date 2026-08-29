@@ -38,6 +38,7 @@ Pilastri: **memoria visiva**, **inseguimento in tempo reale**, **risk vs. reward
 ├── CLAUDE.md
 ├── index.html          → gioco (Three.js)
 ├── debug.html          → vista di debug DOM, resta viva per sempre
+├── leaderboard.php     → classifica a punti (GET top10 / POST salva) su JSON
 ├── src/
 │   ├── config.js       → tutti i parametri di bilanciamento
 │   ├── core/           → logica pura, zero dipendenze
@@ -117,6 +118,15 @@ Pilastri: **memoria visiva**, **inseguimento in tempo reale**, **risk vs. reward
 
 Dopo una cattura le caselle già sbloccate **restano illuminate**: il giocatore
 rifà la strada che conosce, non ricomincia a memoria da zero.
+
+### Punteggio e classifica
+
+Punteggio cumulativo per partita: **+1** per ogni casella scoperta (prima volta),
+**−1** per ogni casella percorsa dal villain. Mostrato nell'HUD e nel game over.
+Se entra nelle prime 10 si chiede il nome e si salva. Persistenza server-side:
+`leaderboard.php` (richiede PHP) legge/scrive `assets/leaderboard.json` (top 10);
+il file dati non è versionato e la cartella `assets/` dev'essere scrivibile dal
+web server. Il frontend usa `fetch` relativo, quindi funziona anche in sottocartella.
 
 ### Power-up
 

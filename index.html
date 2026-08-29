@@ -49,6 +49,8 @@
     #lives .on { color: #ff6b5b; }
     #lives .off { color: #4a2c33; }
 
+    #score { padding: .3rem .9rem 0; font-size: .95rem; font-weight: 700; color: #ffe08a; }
+
     /* Effetti attivi: chip con countdown, in alto a sinistra sotto il livello. */
     #effects {
       padding: .35rem .9rem 0;
@@ -134,6 +136,31 @@
       color: #0a0a12; background: #6fc7e0; border: none; border-radius: 12px;
       pointer-events: auto; touch-action: manipulation; cursor: pointer;
     }
+    .screen .play.small { margin-top: 0; padding: .55rem 1rem; font-size: .95rem; }
+
+    /* Punteggio finale e classifica. */
+    #goScore { margin: 0; font-size: 1.4rem; font-weight: 700; color: #ffe08a;
+      text-shadow: 0 0 14px rgba(255,210,90,.5); }
+    #nameEntry.hidden { display: none; }
+    #nameEntry .namerow { display: flex; gap: .5rem; justify-content: center; margin-top: .4rem; }
+    #nameInput {
+      pointer-events: auto; width: 10rem; padding: .55rem .7rem; font: inherit;
+      color: #e0e0f0; background: rgba(255,255,255,.08);
+      border: 1px solid rgba(140,170,230,.4); border-radius: 10px; text-align: center;
+    }
+    #leaderboard {
+      list-style: none; margin: 0; padding: 0; width: min(20rem, 80vw);
+      display: flex; flex-direction: column; gap: .18rem; font-size: .95rem;
+    }
+    #leaderboard li {
+      display: flex; justify-content: space-between; gap: 1rem;
+      padding: .28rem .7rem; border-radius: 8px; background: rgba(255,255,255,.05);
+    }
+    #leaderboard li .rank { opacity: .55; width: 1.6rem; text-align: right; }
+    #leaderboard li .nm { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #leaderboard li .sc { color: #ffe08a; font-weight: 700; }
+    #leaderboard li.me { background: rgba(255,210,90,.18); border: 1px solid rgba(255,210,90,.4); }
+    #leaderboard li.empty { justify-content: center; opacity: .5; background: none; }
   </style>
 </head>
 <body>
@@ -145,6 +172,7 @@
       <span id="phase"></span>
       <span id="lives"></span>
     </div>
+    <div id="score"></div>
     <div id="effects"></div>
     <div id="banner"></div>
   </div>
@@ -175,6 +203,20 @@
   <div id="gameover" class="screen hidden">
     <h1>GAME OVER</h1>
     <p class="hint" id="goResult"></p>
+    <p id="goScore"></p>
+
+    <!-- Inserimento nome (solo se si entra in top 10). -->
+    <div id="nameEntry" class="hidden">
+      <p class="hint">Sei in classifica! Inserisci il tuo nome:</p>
+      <div class="namerow">
+        <input id="nameInput" maxlength="16" placeholder="Nome" autocomplete="off" />
+        <button id="saveScore" class="play small">Salva</button>
+      </div>
+    </div>
+
+    <!-- Classifica top 10. -->
+    <ol id="leaderboard"></ol>
+
     <p class="best" id="goBest"></p>
     <button class="play" id="retryBtn">↺ Riprova</button>
   </div>

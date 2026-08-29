@@ -55,6 +55,72 @@ function saveBest(v) {
 let best = loadBest();
 const bestText = () => (best > 0 ? 'Record: livello ' + best : 'Nessun record');
 
+// --- Classifica a punti (file JSON sul server via leaderboard.php) ----------
+const LEADERBOARD_URL = './leaderboard.php';
+let pendingScore = 0;
+
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g,
+  (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function fetchLeaderboard() {
+  const r = await fetch(LEADERBOARD_URL, { cache: 'no-store' });
+  if (!r.ok) throw new Error('http ' + r.status);
+  return r.json();
+}
+async function submitScore(name, score) {
+  const r = await fetch(LEADERBOARD_URL, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, score }),
+  });
+  if (!r.ok) throw new Error('http ' + r.status);
+  return r.json();
+}
+function qualifies(list, score) {
+  return list.length < 10 || score > list[list.length - 1].score;
+}
+function renderLeaderboard(list, meName) {
+  const el = $('leaderboard');
+  if (!list || list.length === 0) {
+    el.innerHTML = '<li class="empty">Classifica vuota — sii il primo!</li>';
+    return;
+  }
+  el.innerHTML = list.map((e, i) => {
+    const me = meName != null && e.name === meName ? ' me' : '';
+    return `<li class="${me.trim()}"><span class="rank">${i + 1}</span>`
+      + `<span class="nm">${escapeHtml(e.name)}</span>`
+      + `<span class="sc">${e.score}</span></li>`;
+  }).join('');
+}
+
+// Al game over: mostra classifica; se il punteggio entra in top 10, chiede il nome.
+async function showLeaderboard(score) {
+  pendingScore = score;
+  $('nameEntry').classList.add('hidden');
+  $('leaderboard').innerHTML = '<li class="empty">Carico…</li>';
+  try {
+    const list = await fetchLeaderboard();
+    renderLeaderboard(list);
+    if (qualifies(list, score)) {
+      $('nameEntry').classList.remove('hidden');
+      const inp = $('nameInput');
+      inp.value = '';
+      inp.focus();
+    }
+  } catch (e) {
+    $('leaderboard').innerHTML = '<li class="empty">Classifica non disponibile</li>';
+  }
+}
+async function onSaveScore() {
+  const name = ($('nameInput').value || '').trim() || 'Anonimo';
+  $('saveScore').disabled = true;
+  try {
+    const list = await submitScore(name, pendingScore);
+    renderLeaderboard(list, name);
+  } catch (e) { /* offline: ignora */ }
+  $('nameEntry').classList.add('hidden');
+  $('saveScore').disabled = false;
+}
+
 // Audio procedurale. Va "risvegliato" al primo gesto dell'utente.
 const sound = new Sound();
 
@@ -114,6 +180,10 @@ function flashScreen() {
 $('playBtn').addEventListener('click', beginGame);
 $('retryBtn').addEventListener('click', beginGame);
 $('titleBest').textContent = bestText();
+
+// Salvataggio del punteggio in classifica.
+$('saveScore').addEventListener('click', onSaveScore);
+$('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') onSaveScore(); });
 
 // Pulsante mute.
 const muteBtn = $('mute');
@@ -181,11 +251,13 @@ function handleEvents(now) {
         if (reached > best) { best = reached; saveBest(best); }
         const why = e.reason === 'villainFinish' ? 'Il villain è arrivato al traguardo.' : 'Vite esaurite.';
         $('goResult').textContent = why + ' Sei arrivato al livello ' + reached + '.';
+        $('goScore').textContent = 'Punteggio: ' + game.score;
         $('goBest').textContent = bestText();
         $('gameover').classList.remove('hidden');
         uiState = 'over';
         sound.gameOver();
         vibrate([80, 60, 80]);
+        showLeaderboard(game.score); // carica classifica ed eventuale inserimento nome
         break;
       }
     }
@@ -201,6 +273,8 @@ function renderHud(snap, now) {
   const empty = Math.max(0, CONFIG.lives.max - n);
   $('lives').innerHTML =
     `<span class="on">${'♥'.repeat(n)}</span><span class="off">${'♥'.repeat(empty)}</span>`;
+
+  $('score').textContent = 'Punti: ' + snap.score;
 
   // Effetti attivi con countdown in secondi.
   const fx = [];
