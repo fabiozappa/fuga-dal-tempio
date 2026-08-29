@@ -41,6 +41,9 @@ let errorFlash = { key: null, until: 0 };
 let quakeEnabled = true;
 let playerMoved = false;
 
+// Pausa di fine livello (ms rimanenti): fermo immagine prima del livello dopo.
+let winTimer = 0;
+
 // Record persistente (livello massimo raggiunto) in localStorage.
 const BEST_KEY = 'fuga_best';
 function loadBest() {
@@ -168,9 +171,10 @@ function handleEvents(now) {
         vibrate(120);
         break;
       case 'win':
-        banner = { text: 'LIVELLO ' + e.level + ' SUPERATO!', until: now + 1500 };
+        // Fermo immagine ~2s con scritta e suono, poi il livello successivo.
+        banner = { text: 'LIVELLO ' + e.level + ' SUPERATO!', until: now + 2200, cls: 'win' };
         sound.win();
-        game.nextLevel();
+        winTimer = 2000;
         break;
       case 'gameOver': {
         const reached = game.level;
@@ -208,7 +212,10 @@ function renderHud(snap, now) {
   }
   $('effects').innerHTML = fx.join('');
 
-  $('banner').textContent = now < banner.until ? banner.text : '';
+  const b = $('banner');
+  const show = now < banner.until;
+  b.textContent = show ? banner.text : '';
+  b.className = show ? (banner.cls || '') : '';
 }
 
 let last = performance.now();
@@ -223,6 +230,12 @@ function frame(now) {
     // Movimento continuo tenendo premuto: il core limita col cooldown.
     if (input.heldDir) game.movePlayer(input.heldDir);
     handleEvents(now);
+
+    // Fine livello: fermo immagine, poi passa al livello successivo.
+    if (winTimer > 0) {
+      winTimer -= dt;
+      if (winTimer <= 0) { winTimer = 0; game.nextLevel(); }
+    }
   }
 
   const snap = game.getSnapshot();
