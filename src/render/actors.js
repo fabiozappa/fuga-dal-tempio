@@ -102,9 +102,10 @@ export class Actors {
     const v = tileGrid.worldPos(snap.villain.x, snap.villain.y);
     this.moveToward(this.villain, v.x - SCREEN_RIGHT.x * SEP, v.z - SCREEN_RIGHT.z * SEP, dtMs);
 
-    // Bagliore della torcia: segue la fiamma dell'esploratrice, con guizzo.
+    // Bagliore della torcia: segue la fiamma dell'esploratrice, con un guizzo
+    // lento e tenue.
     this.torchTime = (this.torchTime || 0) + dtMs;
-    const flicker = 0.85 + 0.15 * Math.sin(this.torchTime * 0.02) + 0.06 * Math.sin(this.torchTime * 0.053);
+    const flicker = 0.94 + 0.045 * Math.sin(this.torchTime * 0.006) + 0.02 * Math.sin(this.torchTime * 0.016);
     const offX = TORCH.normX * this.player.scale.x;
     const offY = TORCH.normY * this.player.scale.y;
     this.torchGlow.position.set(
