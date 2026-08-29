@@ -210,6 +210,43 @@ export function makeMaskTexture(size = 128) {
   return iconTexture(c);
 }
 
+// Ali d'angelo bianche (power-up raro: supera il livello).
+export function makeWingsTexture(size = 128) {
+  const { c, ctx } = iconCanvas(size);
+
+  // Una piuma: capsula appuntita in alto, ancorata al perno e ruotata.
+  const feather = (px, py, ang, len, w) => {
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.moveTo(-w, 0);
+    ctx.lineTo(-w * 0.5, -len);
+    ctx.quadraticCurveTo(0, -len - w * 0.7, w * 0.5, -len);
+    ctx.lineTo(w, 0);
+    ctx.quadraticCurveTo(0, w * 0.7, -w, 0);
+    ctx.closePath();
+    ctx.fillStyle = '#f6faff';
+    ctx.fill();
+    ctx.lineWidth = size * 0.012;
+    ctx.strokeStyle = '#c7d4e8';
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  const angs = [0.28, 0.6, 0.92, 1.2, 1.42];
+  const lens = [0.30, 0.37, 0.42, 0.40, 0.32];
+  const wing = (dir) => {
+    const px = dir * size * 0.05, py = size * 0.06;
+    for (let i = 0; i < angs.length; i++) {
+      feather(px, py, dir * angs[i], size * lens[i], size * 0.05);
+    }
+  };
+  wing(1);
+  wing(-1);
+  return iconTexture(c);
+}
+
 // Terreno della giungla attorno: terriccio scuro con fogliame.
 export function makeGroundTexture(size = 256) {
   const c = document.createElement('canvas');

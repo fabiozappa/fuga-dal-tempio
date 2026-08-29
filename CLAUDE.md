@@ -122,9 +122,11 @@ rifà la strada che conosce, non ricomincia a memoria da zero.
 
 Sempre in fondo a un ramo cieco, mai sul percorso principale.
 
-- **Vita Extra** — +1 vita, fino al massimo da config.
-- **Gelo** — il villain resta immobile per la durata da config.
-- **Rivelatore** — il percorso corretto si illumina di nuovo per la durata da config.
+- **Vita Extra** (cuore rosso) — +1 vita, fino al massimo da config.
+- **Gelo** (fiocco di neve) — il villain resta immobile per la durata da config.
+- **Rivelatore** (maschera Inca) — il percorso si illumina di nuovo per la durata da config.
+- **Ali d'Angelo** (raro) — superano subito il livello. Probabilità di comparsa =
+  livello% (livello 3 → 3%); se escono, sostituiscono uno dei power-up comuni.
 
 ---
 

@@ -6,13 +6,15 @@ import { cellKey } from '../core/grid.js';
 import { POWERUP_KINDS } from '../core/powerUps.js';
 import {
   makeGlowTexture, makeHeartTexture, makeSnowflakeTexture, makeMaskTexture,
+  makeWingsTexture,
 } from './textures.js';
 
-// Colore dell'alone per tipo: rosso-vita, ghiaccio, oro-rivelatore.
+// Colore dell'alone per tipo: rosso-vita, ghiaccio, oro-rivelatore, ali bianco.
 const PU_COLORS = {
   [POWERUP_KINDS.EXTRA_LIFE]: 0xff5a5a,
   [POWERUP_KINDS.FREEZE]:     0x9fe6ff,
   [POWERUP_KINDS.REVEAL]:     0xffd24a,
+  [POWERUP_KINDS.WINGS]:      0xfff4d0,
 };
 
 // Tinte per stato della casella. Il colore moltiplica la texture di terra;
@@ -103,6 +105,7 @@ export class TileGrid {
       [POWERUP_KINDS.EXTRA_LIFE]: makeHeartTexture(),
       [POWERUP_KINDS.FREEZE]:     makeSnowflakeTexture(),
       [POWERUP_KINDS.REVEAL]:     makeMaskTexture(),
+      [POWERUP_KINDS.WINGS]:      makeWingsTexture(),
     };
   }
 

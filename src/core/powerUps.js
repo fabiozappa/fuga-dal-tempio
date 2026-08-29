@@ -7,13 +7,21 @@ export const POWERUP_KINDS = {
   EXTRA_LIFE: 'extraLife', // +1 vita, fino al massimo da config
   FREEZE: 'freeze',        // il villain resta immobile per freezeMs
   REVEAL: 'reveal',        // il percorso corretto si riaccende per revealMs
+  WINGS: 'wings',          // ali d'angelo: supera subito il livello (raro)
 };
+
+// I tre power-up "comuni", assegnati a caso ai rami. Le Ali sono speciali e
+// vengono piazzate a parte (probabilità = livello%), quindi NON sono qui.
+export const COMMON_POWERUP_KINDS = [
+  POWERUP_KINDS.EXTRA_LIFE, POWERUP_KINDS.FREEZE, POWERUP_KINDS.REVEAL,
+];
 
 // Etichette leggibili (utili per HUD e debug).
 export const POWERUP_LABELS = {
   [POWERUP_KINDS.EXTRA_LIFE]: 'Vita Extra',
   [POWERUP_KINDS.FREEZE]: 'Gelo',
   [POWERUP_KINDS.REVEAL]: 'Rivelatore',
+  [POWERUP_KINDS.WINGS]: "Ali d'Angelo",
 };
 
 // Applica l'effetto di un power-up allo stato di gioco.

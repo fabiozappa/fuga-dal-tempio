@@ -5,7 +5,7 @@
 import { cellKey, sameCell, inBounds, DIRECTIONS } from './grid.js';
 import { generateLevel, mulberry32 } from './pathGenerator.js';
 import { Villain } from './villain.js';
-import { applyPowerUp } from './powerUps.js';
+import { applyPowerUp, POWERUP_KINDS } from './powerUps.js';
 
 // Le quattro fasi del round + gli esiti terminali.
 export const PHASES = {
@@ -52,6 +52,13 @@ export class GameState {
     this.branchKeys = lvl.branchKeys;
     this.walkableKeys = lvl.walkableKeys;
     this.powerUps = lvl.powerUps.map((p) => ({ ...p }));
+
+    // Ali d'Angelo: rare (probabilità = livello%). Se escono, sostituiscono uno
+    // dei power-up comuni del livello.
+    if (this.powerUps.length && this.rng() < this.level / 100) {
+      const i = Math.floor(this.rng() * this.powerUps.length);
+      this.powerUps[i].kind = POWERUP_KINDS.WINGS;
+    }
 
     // Il giocatore parte dalla prima casella del percorso.
     this.player = { ...this.path[0] };
@@ -234,8 +241,15 @@ export class GameState {
     const pu = this.powerUps.find((p) => p.x === x && p.y === y && !p.collected);
     if (!pu) return;
     pu.collected = true;
-    applyPowerUp(pu.kind, this);
     this.emit('powerUp', { kind: pu.kind, cell: { x, y } });
+
+    // Ali d'Angelo: superano subito il livello.
+    if (pu.kind === POWERUP_KINDS.WINGS) {
+      this.phase = PHASES.WON;
+      this.emit('win', { level: this.level });
+      return;
+    }
+    applyPowerUp(pu.kind, this);
   }
 
   // Gestisce un passo su casella sbagliata.

@@ -9,7 +9,7 @@
 // Tutti i parametri numerici arrivano da config (nessun valore magico).
 
 import { cellKey, inBounds, DIRECTION_LIST } from './grid.js';
-import { POWERUP_KINDS } from './powerUps.js';
+import { COMMON_POWERUP_KINDS } from './powerUps.js';
 
 // PRNG deterministico (mulberry32): utile per riprodurre livelli in debug.
 // Passando un seed si ottiene sempre la stessa sequenza; senza seed si usa
@@ -92,7 +92,7 @@ function growBranch(anchor, occupied, width, height, length, rng) {
 // fasce lungo la lunghezza della plancia, così i power-up restano distribuiti.
 export function generateBranches(path, width, height, config, rng = Math.random) {
   const { rowsPerPowerUp, minLength, maxLength } = config.branches;
-  const kinds = Object.values(POWERUP_KINDS);
+  const kinds = COMMON_POWERUP_KINDS;
 
   const branches = [];
   const powerUps = [];
