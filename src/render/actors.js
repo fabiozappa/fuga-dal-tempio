@@ -2,12 +2,17 @@
 // ancorati ai piedi sulla casella; posizioni interpolate morbidamente.
 
 import * as THREE from 'three';
-import { SCREEN_RIGHT } from './camera.js';
+import { SCREEN_RIGHT, SCREEN_UP } from './camera.js';
+import { makeGlowTexture } from './textures.js';
 
 // Costante di tempo dello smoothing (ms): più piccola = più scattante.
 const TWEEN_TAU = 55;
 const SEP = 0.18;      // sfasamento orizzontale per non sovrapporre le sagome
 const STAND_Y = 0;     // i piedi poggiano sulla faccia superiore delle tile (y=0)
+
+// Posizione della fiamma dentro lo sprite dell'esploratrice (frazioni: X dal
+// centro, Y dal basso) e colore/dimensione del bagliore.
+const TORCH = { normX: -0.27, normY: 0.86, color: 0xffa64a, size: 0.85 };
 
 // Crea uno sprite billboard da un PNG scontornato, ancorato ai piedi (0.5, 0).
 function makeSprite(url, aspect, height) {
@@ -45,7 +50,14 @@ export class Actors {
     this.villain = guardian.sprite;
     this.villainMat = guardian.mat;
 
-    this.group.add(this.player, this.villain);
+    // Bagliore caldo della torcia dell'esploratrice (sprite additivo).
+    this.torchGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: makeGlowTexture(), color: TORCH.color, transparent: true,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    }));
+    this.torchGlow.scale.set(TORCH.size, TORCH.size, 1);
+
+    this.group.add(this.player, this.villain, this.torchGlow);
     this.villainBaseScale = this.villain.scale.clone();
     this.snapNext = true; // al primo frame posiziona di scatto (niente scivolata)
     this.hideGuardian();  // nascosto finché l'esploratore non fa il primo passo
@@ -89,6 +101,20 @@ export class Actors {
 
     const v = tileGrid.worldPos(snap.villain.x, snap.villain.y);
     this.moveToward(this.villain, v.x - SCREEN_RIGHT.x * SEP, v.z - SCREEN_RIGHT.z * SEP, dtMs);
+
+    // Bagliore della torcia: segue la fiamma dell'esploratrice, con guizzo.
+    this.torchTime = (this.torchTime || 0) + dtMs;
+    const flicker = 0.85 + 0.15 * Math.sin(this.torchTime * 0.02) + 0.06 * Math.sin(this.torchTime * 0.053);
+    const offX = TORCH.normX * this.player.scale.x;
+    const offY = TORCH.normY * this.player.scale.y;
+    this.torchGlow.position.set(
+      this.player.position.x + SCREEN_RIGHT.x * offX + SCREEN_UP.x * offY,
+      this.player.position.y + SCREEN_RIGHT.y * offX + SCREEN_UP.y * offY,
+      this.player.position.z + SCREEN_RIGHT.z * offX + SCREEN_UP.z * offY
+    );
+    const s = TORCH.size * flicker;
+    this.torchGlow.scale.set(s, s, 1);
+    this.torchGlow.material.opacity = 0.75 * flicker;
 
     // Feedback del Gelo: lo sprite del guardiano si vela di azzurro ghiaccio.
     const frozen = snap.timers.freezeMs > 0;

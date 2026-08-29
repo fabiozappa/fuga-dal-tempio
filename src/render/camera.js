@@ -27,6 +27,12 @@ export const SCREEN_RIGHT = new THREE.Vector3(
   -Math.cos(AZ), 0, -Math.sin(AZ)
 ).normalize();
 
+// Versore "su dello schermo" nel mondo (per posizionare effetti in screen-space,
+// es. il bagliore della torcia). y_axis della camera = ISO_DIR × SCREEN_RIGHT.
+export const SCREEN_UP = new THREE.Vector3()
+  .crossVectors(ISO_DIR, SCREEN_RIGHT)
+  .normalize();
+
 export function createCamera() {
   // Valori placeholder: verranno sovrascritti da fitCameraToBoard.
   const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);

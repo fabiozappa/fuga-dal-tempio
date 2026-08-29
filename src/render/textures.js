@@ -98,6 +98,22 @@ export function makeRockTexture(size = 128) {
   return tex;
 }
 
+// Alone luminoso morbido (gradiente radiale bianco → trasparente). Va usato con
+// blending additivo e tinta via SpriteMaterial.color.
+export function makeGlowTexture(size = 128) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const r = size / 2;
+  const g = ctx.createRadialGradient(r, r, 0, r, r, r);
+  g.addColorStop(0.0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.25, 'rgba(255,255,255,0.6)');
+  g.addColorStop(1.0, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+
 // Terreno della giungla attorno: terriccio scuro con fogliame.
 export function makeGroundTexture(size = 256) {
   const c = document.createElement('canvas');

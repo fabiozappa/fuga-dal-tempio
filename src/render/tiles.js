@@ -3,6 +3,15 @@
 
 import * as THREE from 'three';
 import { cellKey } from '../core/grid.js';
+import { POWERUP_KINDS } from '../core/powerUps.js';
+import { makeGlowTexture } from './textures.js';
+
+// Relìquie dei power-up, colore per tipo: rosso-vita, ghiaccio, oro-rivelatore.
+const PU_COLORS = {
+  [POWERUP_KINDS.EXTRA_LIFE]: 0xff5a5a,
+  [POWERUP_KINDS.FREEZE]:     0x74d4ee,
+  [POWERUP_KINDS.REVEAL]:     0xffd24a,
+};
 
 // Tinte per stato della casella. Il colore moltiplica la texture di terra;
 // l'emissione dà il "bagliore" alle caselle rivelate.
@@ -22,7 +31,6 @@ const COLORS = {
   collected: 0x6b573a,
   error:     0xc0392b,
 };
-const GEM_COLOR = 0xf5c542;
 const TILE_THICK = 0.1;      // spessore del vetro
 const TILE_BEVEL = 0.02;     // smusso dello spigolo superiore
 
@@ -87,11 +95,9 @@ export class TileGrid {
       color: 0xd8d0bd, roughness: 0.95, metalness: 0.02,
       emissive: 0x3a2a12, emissiveIntensity: 0.3, // tinta calda da torcia
     });
-    this.gemGeo = new THREE.OctahedronGeometry(0.2 * spacing);
-    this.gemMat = new THREE.MeshStandardMaterial({
-      color: GEM_COLOR, emissive: GEM_COLOR, emissiveIntensity: 0.7,
-      roughness: 0.25, metalness: 0.6,
-    });
+    // Relìquia: cristallo sfaccettato + alone luminoso, colorati per tipo.
+    this.gemGeo = new THREE.OctahedronGeometry(0.22 * spacing);
+    this.glowTex = makeGlowTexture();
   }
 
   // Posizione nel mondo di una casella (plancia centrata nell'origine).
@@ -115,7 +121,11 @@ export class TileGrid {
       this.group.remove(mesh);
     }
     this.tiles.clear();
-    for (const g of this.gems) this.group.remove(g.mesh);
+    for (const g of this.gems) {
+      this.group.remove(g.mesh, g.glow);
+      g.mesh.material.dispose();
+      g.glow.material.dispose();
+    }
     this.gems = [];
 
     this.width = width;
@@ -143,14 +153,27 @@ export class TileGrid {
       }
     }
 
-    // Una gemma per ciascun power-up, in fondo al ramo cieco.
+    // Una relìquia per ciascun power-up: cristallo colorato per tipo + alone.
     for (const pu of powerUps) {
-      const mesh = new THREE.Mesh(this.gemGeo, this.gemMat);
+      const color = PU_COLORS[pu.kind] || 0xffd24a;
       const p = this.worldPos(pu.x, pu.y);
+
+      const mesh = new THREE.Mesh(this.gemGeo, new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: 0.9, roughness: 0.2, metalness: 0.4,
+      }));
       mesh.position.set(p.x, 0.55, p.z);
       mesh.visible = false;
-      this.gems.push({ mesh, x: pu.x, y: pu.y });
-      this.group.add(mesh);
+
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: this.glowTex, color, transparent: true,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      glow.scale.set(0.9, 0.9, 1);
+      glow.position.copy(mesh.position);
+      glow.visible = false;
+
+      this.gems.push({ mesh, glow, x: pu.x, y: pu.y });
+      this.group.add(mesh, glow);
     }
   }
 
@@ -192,12 +215,20 @@ export class TileGrid {
       glass.emissiveIntensity = intensity;
     }
 
-    // Gemme visibili solo quando il percorso è rivelato e non ancora raccolte.
+    // Relìquie visibili solo quando il percorso è rivelato e non ancora raccolte.
     for (const g of this.gems) {
       const pu = puByKey.get(cellKey(g.x, g.y));
-      g.mesh.visible = snap.reveal && pu && !pu.collected;
+      const visible = snap.reveal && pu && !pu.collected;
+      g.mesh.visible = visible;
+      g.glow.visible = visible;
+      if (!visible) continue;
+      const bob = 0.55 + Math.sin(now * 0.004) * 0.08;
       g.mesh.rotation.y = now * 0.002;
-      g.mesh.position.y = 0.55 + Math.sin(now * 0.004) * 0.08;
+      g.mesh.position.y = bob;
+      g.glow.position.y = bob;
+      const pulse = 0.85 + 0.15 * Math.sin(now * 0.006);
+      g.glow.scale.setScalar(0.9 * pulse);
+      g.glow.material.opacity = 0.7 * pulse;
     }
   }
 }
