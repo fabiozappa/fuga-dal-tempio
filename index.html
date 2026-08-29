@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Fuga Isometrica</title>
+  <title>Fuga dal Tempio</title>
+
+  <!-- Aggiunta alla home del cellulare (PWA / apple-touch-icon). -->
+  <meta name="theme-color" content="#12331b">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fuga dal Tempio">
 
   <!-- Unica dipendenza esterna: Three.js (r169), vendorizzata in locale e
        risolta via importmap. Nessun build step, nessun bundler, nessuna rete:
@@ -193,8 +202,8 @@
 
   <!-- Schermata iniziale (Fase 6). -->
   <div id="title" class="screen">
-    <h1>FUGA<br>ISOMETRICA</h1>
-    <p class="hint">Memorizza il percorso durante l'anteprima,<br>poi ripercorrilo a memoria prima che il villain ti raggiunga.</p>
+    <h1>FUGA DAL<br>TEMPIO</h1>
+    <p class="hint">Memorizza il percorso durante l'anteprima,<br>poi ripercorrilo a memoria prima che il guardiano ti raggiunga.</p>
     <button class="play" id="playBtn">▶ Gioca</button>
     <p class="best" id="titleBest"></p>
   </div>

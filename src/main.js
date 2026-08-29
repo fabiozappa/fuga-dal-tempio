@@ -249,7 +249,7 @@ function handleEvents(now) {
       case 'gameOver': {
         const reached = game.level;
         if (reached > best) { best = reached; saveBest(best); }
-        const why = e.reason === 'villainFinish' ? 'Il villain è arrivato al traguardo.' : 'Vite esaurite.';
+        const why = e.reason === 'villainFinish' ? 'Il guardiano è arrivato al traguardo.' : 'Vite esaurite.';
         $('goResult').textContent = why + ' Sei arrivato al livello ' + reached + '.';
         $('goScore').textContent = 'Punteggio: ' + game.score;
         $('goBest').textContent = bestText();
