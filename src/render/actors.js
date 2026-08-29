@@ -1,7 +1,5 @@
-// Attori — Three.js.
-//  - giocatore: modello low-poly composito (esploratore/archeologo);
-//  - villain:   sprite billboard da immagine dipinta scontornata (guardiano Inca).
-// Le posizioni sono interpolate morbidamente tra una casella e l'altra.
+// Attori — Three.js. Entrambi sprite billboard da immagini dipinte scontornate,
+// ancorati ai piedi sulla casella; posizioni interpolate morbidamente.
 
 import * as THREE from 'three';
 import { SCREEN_RIGHT } from './camera.js';
@@ -11,47 +9,21 @@ const TWEEN_TAU = 55;
 const SEP = 0.18;      // sfasamento orizzontale per non sovrapporre le sagome
 const STAND_Y = 0;     // i piedi poggiano sulla faccia superiore delle tile (y=0)
 
-function box(w, h, d, color, opts = {}) {
-  const mat = new THREE.MeshStandardMaterial({
-    color, roughness: opts.roughness ?? 0.85, metalness: opts.metalness ?? 0.05,
-    emissive: opts.emissive ?? 0x000000, emissiveIntensity: opts.emissiveIntensity ?? 0,
-  });
-  return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+// Crea uno sprite billboard da un PNG scontornato, ancorato ai piedi (0.5, 0).
+function makeSprite(url, aspect, height) {
+  const tex = new THREE.TextureLoader().load(url);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.center.set(0.5, 0);
+  sprite.scale.set(height * aspect, height, 1);
+  return { sprite, mat };
 }
-function at(mesh, x, y, z) { mesh.position.set(x, y, z); return mesh; }
 
-// --- Esploratore -----------------------------------------------------------
-// Costruito coi piedi all'origine (y=0), rivolto verso la camera (lato -Z).
-function makeExplorer() {
-  const g = new THREE.Group();
-  const CLOTH = 0xa8925a, PANTS = 0x4a3b28, SKIN = 0xd8a878, HAT = 0x5f4526, PACK = 0x6b4a24;
-
-  g.add(at(box(0.12, 0.22, 0.13, PANTS), -0.08, 0.11, 0));
-  g.add(at(box(0.12, 0.22, 0.13, PANTS), 0.08, 0.11, 0));
-  g.add(at(box(0.34, 0.30, 0.20, CLOTH), 0, 0.37, 0));           // torso
-  g.add(at(box(0.10, 0.26, 0.12, CLOTH), -0.22, 0.40, 0));       // braccia
-  g.add(at(box(0.10, 0.26, 0.12, CLOTH), 0.22, 0.40, 0));
-  g.add(at(box(0.26, 0.26, 0.12, PACK), 0, 0.40, 0.14));         // zaino (dietro)
-
-  const head = new THREE.Mesh(
-    new THREE.SphereGeometry(0.12, 16, 12),
-    new THREE.MeshStandardMaterial({ color: SKIN, roughness: 0.7 })
-  );
-  g.add(at(head, 0, 0.64, 0));
-
-  // Cappello: tesa + cupola.
-  const brim = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.21, 0.21, 0.03, 20),
-    new THREE.MeshStandardMaterial({ color: HAT, roughness: 0.85 })
-  );
-  g.add(at(brim, 0, 0.71, 0));
-  const crown = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.12, 0.13, 0.13, 20),
-    new THREE.MeshStandardMaterial({ color: HAT, roughness: 0.85 })
-  );
-  g.add(at(crown, 0, 0.78, 0));
-
-  return { group: g, bodyMats: [], eyeMats: [] };
+// --- Esploratrice (sprite) -------------------------------------------------
+const EXPLORER_SPRITE = './assets/images/sprites/esploratrice/explorer.png';
+function makeExplorerSprite() {
+  return makeSprite(EXPLORER_SPRITE, 679 / 1206, 1.25); // più piccola del guardiano
 }
 
 // --- Guardiano (sprite) ----------------------------------------------------
@@ -59,31 +31,21 @@ function makeExplorer() {
 // guarda sempre la camera, ancorato ai piedi sulla casella. Il Gelo lo tinge di
 // azzurro ghiaccio.
 const GUARDIAN_SPRITE = './assets/images/sprites/guardiano/guardian.png';
-const GUARDIAN_ASPECT = 826 / 1264; // proporzioni del PNG scontornato
-const GUARDIAN_HEIGHT = 1.5;        // altezza in unità di mondo (imponente, non enorme)
-
 function makeGuardianSprite() {
-  const tex = new THREE.TextureLoader().load(GUARDIAN_SPRITE);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-  const sprite = new THREE.Sprite(mat);
-  sprite.center.set(0.5, 0); // origine ai piedi
-  sprite.scale.set(GUARDIAN_HEIGHT * GUARDIAN_ASPECT, GUARDIAN_HEIGHT, 1);
-  return { sprite, mat };
+  return makeSprite(GUARDIAN_SPRITE, 826 / 1264, 1.5); // imponente, non enorme
 }
 
 export class Actors {
   constructor() {
     this.group = new THREE.Group();
 
-    const player = makeExplorer();
+    const explorer = makeExplorerSprite();
     const guardian = makeGuardianSprite();
-    this.player = player.group;
+    this.player = explorer.sprite;
     this.villain = guardian.sprite;
     this.villainMat = guardian.mat;
 
     this.group.add(this.player, this.villain);
-    this.player.traverse((m) => { if (m.isMesh) m.castShadow = true; });
     this.villainBaseScale = this.villain.scale.clone();
     this.snapNext = true; // al primo frame posiziona di scatto (niente scivolata)
     this.hideGuardian();  // nascosto finché l'esploratore non fa il primo passo
