@@ -6,6 +6,7 @@
 .vscode/
 .idea/
 *.swp
+.claude/
 
 # Log e file temporanei
 *.log
